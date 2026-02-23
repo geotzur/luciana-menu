@@ -28,11 +28,12 @@ export function MenuHeader({
 }: MenuHeaderProps) {
   return (
     <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
-      <div className="flex items-center justify-between px-4 py-3">
+      <div className="relative flex items-center justify-between px-4 py-3">
+        <div className="w-10" />
         <img
           src={lucianaLogo}
           alt="Luciana Italian House"
-          className="h-10 object-contain"
+          className="h-10 object-contain absolute left-1/2 -translate-x-1/2"
         />
         <div className="flex items-center gap-1">
           <Button
