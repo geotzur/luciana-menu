@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useCategories, useAllDishes } from "@/hooks/useMenu";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, LogOut, Eye } from "lucide-react";
+import { Plus, Pencil, Trash2, LogOut, Eye, Search } from "lucide-react";
 import lucianaLogo from "@/assets/luciana-logo.png";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
@@ -128,7 +128,7 @@ function CategoryManager({ categories, onUpdate }: { categories: Category[]; onU
 
   return (
     <>
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-row-reverse">
         <h2 className="text-xl font-bold text-foreground">קטגוריות</h2>
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditing(null); setForm({ name_he: "", name_en: "", display_order: 0 }); } }}>
           <DialogTrigger asChild>
@@ -173,6 +173,7 @@ function DishManager({ dishes, categories, onUpdate }: { dishes: Dish[]; categor
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Dish | null>(null);
+  const [search, setSearch] = useState("");
   const emptyForm = {
     name_he: "", name_en: "", description_he: "", description_en: "",
     price: 0, category_id: "", is_available: true, is_vegan: false,
@@ -244,7 +245,7 @@ function DishManager({ dishes, categories, onUpdate }: { dishes: Dish[]; categor
 
   return (
     <>
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-row-reverse">
         <h2 className="text-xl font-bold text-foreground">מנות</h2>
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditing(null); setForm(emptyForm); } }}>
           <DialogTrigger asChild>
@@ -293,8 +294,18 @@ function DishManager({ dishes, categories, onUpdate }: { dishes: Dish[]; categor
         </Dialog>
       </div>
 
+      <div className="relative">
+        <Search className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          placeholder="חפש מנה..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pr-9"
+        />
+      </div>
+
       <div className="grid gap-3">
-        {dishes.map((dish) => (
+        {dishes.filter((d) => d.name_he.includes(search) || d.name_en.toLowerCase().includes(search.toLowerCase())).map((dish) => (
           <Card key={dish.id} className={!dish.is_available ? "opacity-50" : ""}>
             <CardContent className="flex items-center gap-3 py-3 px-4">
               {dish.image_url && (
