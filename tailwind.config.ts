@@ -57,6 +57,11 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        luciana: {
+          gold: "hsl(var(--luciana-gold))",
+          "gold-light": "hsl(var(--luciana-gold-light))",
+          warm: "hsl(var(--luciana-warm))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
