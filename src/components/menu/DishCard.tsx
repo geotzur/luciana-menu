@@ -71,15 +71,15 @@ export function DishCard({ dish, lang }: DishCardProps) {
 
         <div className="p-4 space-y-1.5">
           <div className="flex items-start justify-between gap-3">
-            <h3 className="font-semibold text-foreground leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+            <h3 className="font-bold text-lg text-foreground leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               {name}
             </h3>
-            <span className="shrink-0 text-primary font-bold text-lg">
+            <span className="shrink-0 text-primary font-bold text-xl">
               {t(lang, "price")}{dish.price}
             </span>
           </div>
           {description && (
-            <p className="text-muted-foreground text-sm leading-relaxed">
+            <p className="text-muted-foreground text-base leading-relaxed">
               {description}
             </p>
           )}
