@@ -19,8 +19,20 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Convert Google Drive share links to direct download links
+    let fetchUrl = imageUrl;
+    const driveFileMatch = imageUrl.match(/drive\.google\.com\/file\/d\/([^/]+)/);
+    if (driveFileMatch) {
+      fetchUrl = `https://drive.google.com/uc?export=view&id=${driveFileMatch[1]}`;
+    } else {
+      const driveOpenMatch = imageUrl.match(/drive\.google\.com\/open\?id=([^&]+)/);
+      if (driveOpenMatch) {
+        fetchUrl = `https://drive.google.com/uc?export=view&id=${driveOpenMatch[1]}`;
+      }
+    }
+
     // Follow redirects and fetch the image
-    const response = await fetch(imageUrl, {
+    const response = await fetch(fetchUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
       },

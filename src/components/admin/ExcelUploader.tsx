@@ -54,18 +54,22 @@ export function ExcelUploader({ onUpdate }: { onUpdate: () => void }) {
         // Auto-detect columns by looking at headers
         const headers = Object.keys(rows[0]);
         
-        // Try to map columns - flexible matching
+        // Try to map columns - flexible matching (normalized)
         const findCol = (keywords: string[]) =>
-          headers.find((h) => keywords.some((k) => h.toLowerCase().includes(k))) || "";
+          headers.find((h) => {
+            const lower = h.toLowerCase().trim();
+            return keywords.some((k) => lower.includes(k.toLowerCase()));
+          }) || "";
 
         const colCategory = findCol(["קטגוריה", "category"]);
-        const colNameHe = findCol(["שם", "name_he", "שם בעברית", "מנה"]);
+        const colNameHe = findCol(["שם המנה", "שם משקה", "שם", "name_he", "מנה"]);
         const colNameEn = findCol(["name_en", "שם באנגלית", "english"]);
-        const colDescHe = findCol(["תיאור", "description_he", "תיאור בעברית"]);
+        const colDescHe = findCol(["מרכיבים", "תיאור", "description_he"]);
         const colDescEn = findCol(["description_en", "תיאור באנגלית"]);
         const colPrice = findCol(["מחיר", "price"]);
         const colImage = findCol(["תמונה", "image", "קישור", "link", "url"]);
-        const colChefNote = findCol(["שף", "chef", "דבר השף"]);
+        const colChefNote = findCol(["דבר השף", "שף", "chef"]);
+        const colDishType = findCol(["סוג מנה", "סוג"]);
         const colVegan = findCol(["טבעוני", "vegan"]);
         const colVegetarian = findCol(["צמחוני", "vegetarian"]);
         const colGlutenFree = findCol(["גלוטן", "gluten"]);
@@ -74,9 +78,12 @@ export function ExcelUploader({ onUpdate }: { onUpdate: () => void }) {
 
         const dishes: ParsedDish[] = [];
         const categorySet = new Set<string>();
+        let lastCategory = "";
 
         for (const row of rows) {
-          const category = String(row[colCategory] || "").trim();
+          const rawCategory = String(row[colCategory] || "").trim();
+          if (rawCategory) lastCategory = rawCategory;
+          const category = lastCategory;
           const name_he = String(row[colNameHe] || "").trim();
           if (!name_he || !category) continue;
 
@@ -94,7 +101,7 @@ export function ExcelUploader({ onUpdate }: { onUpdate: () => void }) {
             name_en: String(row[colNameEn] || "").trim(),
             description_he: String(row[colDescHe] || "").trim(),
             description_en: String(row[colDescEn] || "").trim(),
-            price: parseFloat(String(row[colPrice] || "0").replace(/[^\d.]/g, "")) || 0,
+            price: parseFloat(String(row[colPrice] || "0").split("/")[0].replace(/[^\d.]/g, "")) || 0,
             image_url: String(row[colImage] || "").trim(),
             chef_note: String(row[colChefNote] || "").trim(),
             is_vegan: parseBool(row[colVegan]),
