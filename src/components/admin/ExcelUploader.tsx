@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Upload, FileSpreadsheet, Check, Loader2, AlertTriangle } from "lucide-react";
 import * as XLSX from "xlsx";
+import { ImportImagesButton } from "./ImportImagesButton";
 
 interface ParsedDish {
   category: string;
@@ -259,7 +260,9 @@ export function ExcelUploader({ onUpdate }: { onUpdate: () => void }) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      <ImportImagesButton onDone={onUpdate} />
+      
       <div className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-xl p-8 gap-4">
         <FileSpreadsheet className="h-12 w-12 text-muted-foreground" />
         <p className="text-muted-foreground text-sm text-center">
