@@ -7,16 +7,27 @@ const corsHeaders = {
 };
 
 function extractDriveFileId(url: string): string | null {
-  // /file/d/FILE_ID/
   const match1 = url.match(/\/file\/d\/([^/]+)/);
   if (match1) return match1[1];
-  // ?id=FILE_ID
   const match2 = url.match(/[?&]id=([^&]+)/);
   if (match2) return match2[1];
-  // open?id=FILE_ID
   const match3 = url.match(/open\?id=([^&]+)/);
   if (match3) return match3[1];
   return null;
+}
+
+const IMAGE_SIGNATURES: [number[], string][] = [
+  [[0xFF, 0xD8, 0xFF], "image/jpeg"],
+  [[0x89, 0x50, 0x4E, 0x47], "image/png"],
+  [[0x52, 0x49, 0x46, 0x46], "image/webp"], // RIFF header for WebP
+  [[0x47, 0x49, 0x46], "image/gif"],
+];
+
+function isValidImage(bytes: Uint8Array): boolean {
+  if (bytes.length < 8) return false;
+  return IMAGE_SIGNATURES.some(([sig]) =>
+    sig.every((b, i) => bytes[i] === b)
+  );
 }
 
 Deno.serve(async (req) => {
@@ -29,16 +40,41 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Get all dishes with Google Drive URLs
+    // Parse batch params
+    let batchSize = 10;
+    let offset = 0;
+    try {
+      const body = await req.json();
+      if (body.batchSize) batchSize = Math.min(Math.max(body.batchSize, 1), 50);
+      if (body.offset != null) offset = body.offset;
+    } catch { /* no body is fine */ }
+
+    // Count total remaining Drive images
+    const { count: totalRemaining } = await supabase
+      .from("dishes")
+      .select("id", { count: "exact", head: true })
+      .not("image_url", "is", null)
+      .ilike("image_url", "%drive.google.com%");
+
+    // Get batch of dishes with Google Drive URLs
     const { data: dishes, error: fetchError } = await supabase
       .from("dishes")
       .select("id, image_url")
       .not("image_url", "is", null)
-      .ilike("image_url", "%drive.google.com%");
+      .ilike("image_url", "%drive.google.com%")
+      .range(0, batchSize - 1);
 
     if (fetchError) throw fetchError;
 
-    const results = { imported: 0, failed: 0, skipped: 0, errors: [] as string[] };
+    const results = {
+      imported: 0,
+      failed: 0,
+      skipped: 0,
+      errors: [] as string[],
+      totalRemaining: totalRemaining ?? 0,
+      batchSize,
+      hasMore: false,
+    };
 
     if (!dishes || dishes.length === 0) {
       return new Response(JSON.stringify({ ...results, message: "No Google Drive images found" }), {
@@ -51,10 +87,10 @@ Deno.serve(async (req) => {
         const fileId = extractDriveFileId(dish.image_url!);
         if (!fileId) {
           results.skipped++;
+          results.errors.push(`${dish.id}: Could not extract Drive file ID`);
           continue;
         }
 
-        // Download from Google Drive - follow redirects
         const downloadUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
         const response = await fetch(downloadUrl, { redirect: "follow" });
 
@@ -64,23 +100,35 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        const contentType = response.headers.get("content-type") || "image/jpeg";
-        const blob = await response.blob();
-        
-        if (blob.size < 1000) {
-          // Probably an error page, not an image
+        const contentType = response.headers.get("content-type") || "";
+        if (!contentType.startsWith("image/")) {
           results.failed++;
-          results.errors.push(`${dish.id}: Response too small (${blob.size} bytes)`);
+          results.errors.push(`${dish.id}: Not an image (content-type: ${contentType})`);
+          await response.arrayBuffer(); // consume body
+          continue;
+        }
+
+        const arrayBuf = await response.arrayBuffer();
+        const bytes = new Uint8Array(arrayBuf);
+
+        if (!isValidImage(bytes)) {
+          results.failed++;
+          results.errors.push(`${dish.id}: Invalid image file signature`);
+          continue;
+        }
+
+        if (bytes.length < 1000) {
+          results.failed++;
+          results.errors.push(`${dish.id}: Response too small (${bytes.length} bytes)`);
           continue;
         }
 
         const ext = contentType.includes("png") ? "png" : contentType.includes("webp") ? "webp" : "jpg";
         const storagePath = `${dish.id}.${ext}`;
 
-        // Upload to storage (upsert)
         const { error: uploadError } = await supabase.storage
           .from("dish-images")
-          .upload(storagePath, blob, {
+          .upload(storagePath, bytes, {
             contentType,
             upsert: true,
           });
@@ -91,12 +139,10 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Get public URL
         const { data: urlData } = supabase.storage
           .from("dish-images")
           .getPublicUrl(storagePath);
 
-        // Update dish record
         const { error: updateError } = await supabase
           .from("dishes")
           .update({ image_url: urlData.publicUrl })
@@ -114,6 +160,9 @@ Deno.serve(async (req) => {
         results.errors.push(`${dish.id}: ${e.message}`);
       }
     }
+
+    // Check if there are more after this batch
+    results.hasMore = (results.totalRemaining - results.imported - results.failed - results.skipped) > 0;
 
     return new Response(JSON.stringify(results), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

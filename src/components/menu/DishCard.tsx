@@ -15,7 +15,8 @@ export function DishCard({ dish, lang }: DishCardProps) {
   const name = lang === "he" ? dish.name_he : dish.name_en || dish.name_he;
   const description = lang === "he" ? dish.description_he : dish.description_en || dish.description_he;
   const chefNote = (dish as any).chef_note;
-  const imageUrl = getProxiedImageUrl(dish.image_url);
+  const thumbnailUrl = getProxiedImageUrl(dish.image_url, 'thumbnail');
+  const fullImageUrl = getProxiedImageUrl(dish.image_url, 'full');
 
   const badges = [];
   if (dish.is_new) badges.push({ label: t(lang, "newDish"), icon: null, color: "bg-primary text-primary-foreground" });
@@ -30,10 +31,10 @@ export function DishCard({ dish, lang }: DishCardProps) {
         className="group bg-card rounded-xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-300 cursor-pointer"
         onClick={() => setOpen(true)}
       >
-        {imageUrl ? (
+        {thumbnailUrl ? (
           <div className="relative aspect-[16/10] overflow-hidden">
             <img
-              src={imageUrl}
+              src={thumbnailUrl}
               alt={name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               loading="lazy"
@@ -96,8 +97,8 @@ export function DishCard({ dish, lang }: DishCardProps) {
           <DialogHeader>
             <DialogTitle style={{ fontFamily: "'Playfair Display', serif" }}>{name}</DialogTitle>
           </DialogHeader>
-          {imageUrl && (
-            <img src={imageUrl} alt={name} className="w-full h-48 object-cover rounded-lg" />
+          {fullImageUrl && (
+            <img src={fullImageUrl} alt={name} className="w-full h-48 object-cover rounded-lg" />
           )}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
