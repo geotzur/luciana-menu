@@ -53,6 +53,7 @@ export type Database = {
       dishes: {
         Row: {
           category_id: string
+          chef_note: string | null
           created_at: string
           description_en: string | null
           description_he: string | null
@@ -72,6 +73,7 @@ export type Database = {
         }
         Insert: {
           category_id: string
+          chef_note?: string | null
           created_at?: string
           description_en?: string | null
           description_he?: string | null
@@ -91,6 +93,7 @@ export type Database = {
         }
         Update: {
           category_id?: string
+          chef_note?: string | null
           created_at?: string
           description_en?: string | null
           description_he?: string | null

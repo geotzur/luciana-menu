@@ -177,7 +177,7 @@ function DishManager({ dishes, categories, onUpdate }: { dishes: Dish[]; categor
   const emptyForm = {
     name_he: "", name_en: "", description_he: "", description_en: "",
     price: 0, category_id: "", is_available: true, is_vegan: false,
-    is_gluten_free: false, is_spicy: false, is_vegetarian: false, is_new: false, display_order: 0, image_url: "",
+    is_gluten_free: false, is_spicy: false, is_vegetarian: false, is_new: false, display_order: 0, image_url: "", chef_note: "",
   };
   const [form, setForm] = useState(emptyForm);
   const [uploading, setUploading] = useState(false);
@@ -238,7 +238,7 @@ function DishManager({ dishes, categories, onUpdate }: { dishes: Dish[]; categor
       description_en: dish.description_en || "", price: dish.price, category_id: dish.category_id,
       is_available: dish.is_available, is_vegan: dish.is_vegan, is_gluten_free: dish.is_gluten_free,
       is_spicy: dish.is_spicy, is_vegetarian: dish.is_vegetarian, is_new: dish.is_new,
-      display_order: dish.display_order, image_url: dish.image_url || "",
+      display_order: dish.display_order, image_url: dish.image_url || "", chef_note: (dish as any).chef_note || "",
     });
     setOpen(true);
   };
@@ -280,6 +280,7 @@ function DishManager({ dishes, categories, onUpdate }: { dishes: Dish[]; categor
                 {form.image_url && <img src={form.image_url} alt="" className="w-full h-32 object-cover rounded-lg mb-2" />}
                 <Input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} />
               </div>
+              <div><Label>דבר השף</Label><Textarea value={form.chef_note} onChange={(e) => setForm({ ...form, chef_note: e.target.value })} placeholder="תיאור מיוחד מהשף..." /></div>
               <div className="grid grid-cols-2 gap-3">
                 <label className="flex items-center gap-2"><Switch checked={form.is_available} onCheckedChange={(v) => setForm({ ...form, is_available: v })} /><span className="text-sm">זמין</span></label>
                 <label className="flex items-center gap-2"><Switch checked={form.is_new} onCheckedChange={(v) => setForm({ ...form, is_new: v })} /><span className="text-sm">חדש</span></label>
