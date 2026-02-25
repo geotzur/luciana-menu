@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Language, t } from "@/lib/i18n";
 import type { Dish } from "@/hooks/useMenu";
 import { Leaf, WheatOff, Flame, Sprout, ChefHat } from "lucide-react";
+import { getProxiedImageUrl } from "@/lib/imageUtils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface DishCardProps {
@@ -14,6 +15,7 @@ export function DishCard({ dish, lang }: DishCardProps) {
   const name = lang === "he" ? dish.name_he : dish.name_en || dish.name_he;
   const description = lang === "he" ? dish.description_he : dish.description_en || dish.description_he;
   const chefNote = (dish as any).chef_note;
+  const imageUrl = getProxiedImageUrl(dish.image_url);
 
   const badges = [];
   if (dish.is_new) badges.push({ label: t(lang, "newDish"), icon: null, color: "bg-primary text-primary-foreground" });
@@ -28,10 +30,10 @@ export function DishCard({ dish, lang }: DishCardProps) {
         className="group bg-card rounded-xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-300 cursor-pointer"
         onClick={() => setOpen(true)}
       >
-        {dish.image_url ? (
+        {imageUrl ? (
           <div className="relative aspect-[16/10] overflow-hidden">
             <img
-              src={dish.image_url}
+              src={imageUrl}
               alt={name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               loading="lazy"
@@ -94,8 +96,8 @@ export function DishCard({ dish, lang }: DishCardProps) {
           <DialogHeader>
             <DialogTitle style={{ fontFamily: "'Playfair Display', serif" }}>{name}</DialogTitle>
           </DialogHeader>
-          {dish.image_url && (
-            <img src={dish.image_url} alt={name} className="w-full h-48 object-cover rounded-lg" />
+          {imageUrl && (
+            <img src={imageUrl} alt={name} className="w-full h-48 object-cover rounded-lg" />
           )}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
