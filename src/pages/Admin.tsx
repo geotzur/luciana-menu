@@ -16,6 +16,8 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Pencil, Trash2, LogOut, Eye, Search } from "lucide-react";
 import lucianaLogo from "@/assets/luciana-logo.png";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
+import { ExcelUploader } from "@/components/admin/ExcelUploader";
+import { getProxiedImageUrl } from "@/lib/imageUtils";
 
 type Category = Tables<"categories">;
 type Dish = Tables<"dishes"> & { categories?: { name_he: string; name_en: string } | null };
@@ -77,6 +79,7 @@ export default function Admin() {
           <TabsList className="w-full">
             <TabsTrigger value="dishes" className="flex-1">מנות</TabsTrigger>
             <TabsTrigger value="categories" className="flex-1">קטגוריות</TabsTrigger>
+            <TabsTrigger value="import" className="flex-1">ייבוא</TabsTrigger>
           </TabsList>
 
           <TabsContent value="categories" className="space-y-4 mt-4">
@@ -85,6 +88,10 @@ export default function Admin() {
 
           <TabsContent value="dishes" className="space-y-4 mt-4">
             <DishManager dishes={dishes as Dish[]} categories={categories} onUpdate={invalidate} />
+          </TabsContent>
+
+          <TabsContent value="import" className="space-y-4 mt-4">
+            <ExcelUploader onUpdate={invalidate} />
           </TabsContent>
         </Tabs>
       </main>
@@ -310,7 +317,7 @@ function DishManager({ dishes, categories, onUpdate }: { dishes: Dish[]; categor
           <Card key={dish.id} className={!dish.is_available ? "opacity-50" : ""}>
             <CardContent className="flex items-center gap-3 py-3 px-4">
               {dish.image_url && (
-                <img src={dish.image_url} alt="" className="w-12 h-12 object-cover rounded-md shrink-0" />
+                <img src={getProxiedImageUrl(dish.image_url) || ""} alt="" className="w-12 h-12 object-cover rounded-md shrink-0" />
               )}
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-foreground truncate">{dish.name_he}</div>
