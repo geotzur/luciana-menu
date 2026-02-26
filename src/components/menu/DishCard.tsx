@@ -28,7 +28,7 @@ export function DishCard({ dish, lang }: DishCardProps) {
   return (
     <>
       <div
-        className="group bg-card rounded-xl overflow-hidden border border-border hover:border-primary/30 transition-all duration-300 cursor-pointer"
+        className="dish-card group bg-card rounded-xl overflow-hidden border border-border hover:border-primary/30 transition-colors duration-300 cursor-pointer"
         onClick={() => setOpen(true)}
       >
         {thumbnailUrl ? (
@@ -36,15 +36,16 @@ export function DishCard({ dish, lang }: DishCardProps) {
             <img
               src={thumbnailUrl}
               alt={name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              className="w-full h-full object-cover"
               loading="lazy"
+              decoding="async"
             />
             {badges.length > 0 && (
               <div className="absolute top-2 start-2 flex flex-wrap gap-1">
                 {badges.map((b) => (
                   <span
                     key={b.label}
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${b.color}`}
+                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${b.color}`}
                   >
                     {b.icon && <b.icon className="w-3 h-3" />}
                     {b.label}
@@ -59,7 +60,7 @@ export function DishCard({ dish, lang }: DishCardProps) {
               {badges.map((b) => (
                 <span
                   key={b.label}
-                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${b.color}`}
+                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${b.color}`}
                 >
                   {b.icon && <b.icon className="w-3 h-3" />}
                   {b.label}
@@ -69,23 +70,23 @@ export function DishCard({ dish, lang }: DishCardProps) {
           )
         )}
 
-        <div className="p-4 space-y-1.5">
+        <div className="p-4 space-y-2">
           <div className="flex items-start justify-between gap-3">
-            <h3 className="font-bold text-lg text-foreground leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
+            <h3 className="font-bold text-2xl text-foreground leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
               {name}
             </h3>
-            <span className="shrink-0 text-primary font-bold text-xl">
+            <span className="shrink-0 text-primary font-bold text-2xl">
               {t(lang, "price")}{dish.price}
             </span>
           </div>
           {description && (
-            <p className="text-muted-foreground text-base leading-relaxed">
+            <p className="text-muted-foreground text-lg leading-relaxed">
               {description}
             </p>
           )}
           {chefNote && (
-            <div className="flex items-center gap-1 text-primary/70 text-xs mt-1">
-              <ChefHat className="w-3 h-3" />
+            <div className="flex items-center gap-1.5 text-primary/70 text-base mt-1">
+              <ChefHat className="w-4 h-4" />
               <span>{lang === "he" ? "דבר השף" : "Chef's Note"}</span>
             </div>
           )}
@@ -102,11 +103,11 @@ export function DishCard({ dish, lang }: DishCardProps) {
           )}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-primary font-bold text-xl">{t(lang, "price")}{dish.price}</span>
+              <span className="text-primary font-bold text-2xl">{t(lang, "price")}{dish.price}</span>
               {badges.length > 0 && (
                 <div className="flex flex-wrap gap-1">
                   {badges.map((b) => (
-                    <span key={b.label} className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold ${b.color}`}>
+                    <span key={b.label} className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${b.color}`}>
                       {b.icon && <b.icon className="w-3 h-3" />}
                       {b.label}
                     </span>
@@ -115,15 +116,15 @@ export function DishCard({ dish, lang }: DishCardProps) {
               )}
             </div>
             {description && (
-              <p className="text-muted-foreground text-sm leading-relaxed">{description}</p>
+              <p className="text-muted-foreground text-base leading-relaxed">{description}</p>
             )}
             {chefNote && (
               <div className="bg-muted/50 rounded-lg p-3 border border-border">
-                <div className="flex items-center gap-2 text-primary font-medium text-sm mb-1">
-                  <ChefHat className="w-4 h-4" />
+                <div className="flex items-center gap-2 text-primary font-medium text-base mb-1">
+                  <ChefHat className="w-5 h-5" />
                   <span>{lang === "he" ? "דבר השף" : "Chef's Note"}</span>
                 </div>
-                <p className="text-foreground/80 text-sm leading-relaxed">{chefNote}</p>
+                <p className="text-foreground/80 text-base leading-relaxed">{chefNote}</p>
               </div>
             )}
           </div>

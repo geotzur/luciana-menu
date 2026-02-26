@@ -24,7 +24,7 @@ export function CategoryNav({ categories, activeCategory, onSelect, lang }: Cate
   }, [activeCategory]);
 
   return (
-    <div className="sticky top-[57px] z-40 bg-background/95 backdrop-blur-md border-b border-border">
+    <div className="sticky top-[57px] z-40 bg-background border-b border-border">
       <div
         ref={scrollRef}
         className="flex gap-2 overflow-x-auto px-4 py-3 scrollbar-hide"
@@ -34,7 +34,7 @@ export function CategoryNav({ categories, activeCategory, onSelect, lang }: Cate
           ref={activeCategory === null ? activeRef : undefined}
           onClick={() => onSelect(null)}
           className={cn(
-            "shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap",
+            "shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap",
             activeCategory === null
               ? "bg-primary text-primary-foreground"
               : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
@@ -48,7 +48,7 @@ export function CategoryNav({ categories, activeCategory, onSelect, lang }: Cate
             ref={activeCategory === cat.id ? activeRef : undefined}
             onClick={() => onSelect(cat.id)}
             className={cn(
-              "shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap",
+              "shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap",
               activeCategory === cat.id
                 ? "bg-primary text-primary-foreground"
                 : "bg-secondary text-secondary-foreground hover:bg-secondary/80"

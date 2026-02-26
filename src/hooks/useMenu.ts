@@ -16,6 +16,7 @@ export function useCategories() {
       if (error) throw error;
       return data as Category[];
     },
+    staleTime: 5 * 60 * 1000, // 5 minutes — categories rarely change
   });
 }
 
@@ -37,6 +38,7 @@ export function useDishes(categoryId?: string) {
       if (error) throw error;
       return data as Dish[];
     },
+    staleTime: 2 * 60 * 1000, // 2 minutes — avoid refetch on every tab focus
   });
 }
 
@@ -51,5 +53,6 @@ export function useAllDishes() {
       if (error) throw error;
       return data;
     },
+    staleTime: 2 * 60 * 1000, // 2 minutes — avoid refetch on every tab focus
   });
 }

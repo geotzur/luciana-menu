@@ -120,6 +120,12 @@
   font-size: 120%;
 }
 
+/* Scroll performance: skip rendering off-screen dish cards */
+.dish-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 500px;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;

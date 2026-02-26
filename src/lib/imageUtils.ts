@@ -9,13 +9,9 @@ const SUPABASE_PROJECT_ID = import.meta.env.VITE_SUPABASE_PROJECT_ID;
 export function getProxiedImageUrl(url: string | null | undefined, size: 'thumbnail' | 'full' = 'thumbnail'): string | null {
   if (!url) return null;
 
-  // If it's already a Supabase storage URL, use image transforms for thumbnails
+  // If it's already a Supabase storage URL, return as-is
+  // (Image Transforms require Supabase Pro; we handle perf via decoding="async" + content-visibility)
   if (url.includes('supabase.co/storage/')) {
-    if (size === 'thumbnail') {
-      // Use Supabase Image Transforms: resize to 400px width, auto quality
-      const separator = url.includes('?') ? '&' : '?';
-      return `${url}${separator}width=400&quality=75`;
-    }
     return url;
   }
 

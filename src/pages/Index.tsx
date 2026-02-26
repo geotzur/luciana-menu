@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { MenuHeader } from "@/components/menu/MenuHeader";
 import { CategoryNav } from "@/components/menu/CategoryNav";
 import { DishCard } from "@/components/menu/DishCard";
@@ -7,15 +7,45 @@ import { Language, t } from "@/lib/i18n";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
+const BATCH_SIZE = 6;
+
 const Index = () => {
   const [lang, setLang] = useState<Language>("he");
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [isLargeText, setIsLargeText] = useState(false);
   const [isHighContrast, setIsHighContrast] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
 
   const { data: categories = [], isLoading: catsLoading } = useCategories();
   const { data: dishes = [], isLoading: dishesLoading } = useDishes(activeCategory ?? undefined);
 
+  // Reset visible count when category changes or new dishes load
+  useEffect(() => {
+    setVisibleCount(BATCH_SIZE);
+  }, [activeCategory, dishes]);
+
+  // Intersection observer sentinel — loads more dishes when scrolled into view
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const loadMore = useCallback(() => {
+    setVisibleCount((prev) => Math.min(prev + BATCH_SIZE, dishes.length));
+  }, [dishes.length]);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) loadMore();
+      },
+      { rootMargin: "400px" } // start loading 400px before reaching the end
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [loadMore, dishesLoading]);
+
+  const visibleDishes = dishes.slice(0, visibleCount);
+  const hasMore = visibleCount < dishes.length;
   const isRtl = lang === "he";
 
   return (
@@ -67,9 +97,16 @@ const Index = () => {
           </div>
         ) : (
           <div className="grid gap-4">
-            {dishes.map((dish) => (
+            {visibleDishes.map((dish) => (
               <DishCard key={dish.id} dish={dish} lang={lang} />
             ))}
+
+            {/* Sentinel: triggers loading more dishes when scrolled near */}
+            {hasMore && (
+              <div ref={sentinelRef} className="flex justify-center py-4">
+                <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+              </div>
+            )}
           </div>
         )}
       </main>
