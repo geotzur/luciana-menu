@@ -213,14 +213,14 @@ function DishManager({ dishes, categories, onUpdate }: { dishes: Dish[]; categor
   const emptyForm = useMemo(() => ({
     name_he: "", name_en: "", description_he: "", description_en: "",
     price: 0, category_id: "", is_available: true, is_vegan: false,
-    is_gluten_free: false, is_spicy: false, is_vegetarian: false, is_new: false, display_order: 0, image_url: "", chef_note: "",
+    is_gluten_free: false, is_spicy: false, is_vegetarian: false, is_new: false, display_order: 0, image_url: "", chef_note: "", chef_note_en: "",
   }), []);
   const [form, setForm] = useState(emptyForm);
   const [uploading, setUploading] = useState(false);
   const [translating, setTranslating] = useState<string | null>(null); // which field is translating
 
   // Translate a single Hebrew field → English counterpart
-  const handleTranslateField = async (heKey: "name_he" | "description_he", enKey: "name_en" | "description_en") => {
+  const handleTranslateField = async (heKey: "name_he" | "description_he" | "chef_note", enKey: "name_en" | "description_en" | "chef_note_en") => {
     const text = form[heKey];
     if (!text) return;
     setTranslating(heKey);
@@ -235,11 +235,13 @@ function DishManager({ dishes, categories, onUpdate }: { dishes: Dish[]; categor
     const results = await Promise.all([
       form.name_he ? translateHeToEn(form.name_he) : Promise.resolve(""),
       form.description_he ? translateHeToEn(form.description_he) : Promise.resolve(""),
+      form.chef_note ? translateHeToEn(form.chef_note) : Promise.resolve(""),
     ]);
     setForm((prev) => ({
       ...prev,
       name_en: results[0] || prev.name_en,
       description_en: results[1] || prev.description_en,
+      chef_note_en: results[2] || prev.chef_note_en,
     }));
     setTranslating(null);
     toast({ title: "תורגם!", description: "השדות תורגמו לאנגלית." });
@@ -320,7 +322,8 @@ function DishManager({ dishes, categories, onUpdate }: { dishes: Dish[]; categor
       description_en: dish.description_en || "", price: dish.price, category_id: dish.category_id,
       is_available: dish.is_available, is_vegan: dish.is_vegan, is_gluten_free: dish.is_gluten_free,
       is_spicy: dish.is_spicy, is_vegetarian: dish.is_vegetarian, is_new: dish.is_new,
-      display_order: dish.display_order, image_url: dish.image_url || "", chef_note: (dish as any).chef_note || "",
+      display_order: dish.display_order, image_url: dish.image_url || "",
+      chef_note: dish.chef_note || "", chef_note_en: (dish as any).chef_note_en || "",
     });
     setOpen(true);
   };
@@ -387,7 +390,17 @@ function DishManager({ dishes, categories, onUpdate }: { dishes: Dish[]; categor
                 {form.image_url && <img src={form.image_url} alt="" className="w-full h-32 object-cover rounded-lg mb-2" />}
                 <Input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} />
               </div>
-              <div><Label>דבר השף</Label><Textarea value={form.chef_note} onChange={(e) => setForm({ ...form, chef_note: e.target.value })} placeholder="תיאור מיוחד מהשף..." /></div>
+              {/* ---- Hebrew / English chef note pair ---- */}
+              <div><Label>דבר השף (עברית)</Label><Textarea value={form.chef_note} onChange={(e) => setForm({ ...form, chef_note: e.target.value })} placeholder="תיאור מיוחד מהשף..." /></div>
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <Label>דבר השף (אנגלית)</Label>
+                  <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1" onClick={() => handleTranslateField("chef_note", "chef_note_en")} disabled={translating !== null || !form.chef_note}>
+                    <Languages className="h-3 w-3" />{translating === "chef_note" ? "מתרגם..." : "תרגם"}
+                  </Button>
+                </div>
+                <Textarea value={form.chef_note_en} onChange={(e) => setForm({ ...form, chef_note_en: e.target.value })} placeholder="Chef's special note..." dir="ltr" />
+              </div>
 
               {/* ---- Dietary toggles + auto-detect ---- */}
               <div className="space-y-2">
