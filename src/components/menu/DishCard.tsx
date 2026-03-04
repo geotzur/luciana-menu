@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Language, t } from "@/lib/i18n";
 import type { Dish } from "@/hooks/useMenu";
 import { Leaf, WheatOff, Flame, Sprout, ChefHat } from "lucide-react";
@@ -8,10 +8,14 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 interface DishCardProps {
   dish: Dish;
   lang: Language;
+  index?: number;
 }
 
-export function DishCard({ dish, lang }: DishCardProps) {
+export function DishCard({ dish, lang, index = 0 }: DishCardProps) {
   const [open, setOpen] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [dialogImgLoaded, setDialogImgLoaded] = useState(false);
+  const onImgLoad = useCallback(() => setImgLoaded(true), []);
   const name = lang === "he" ? dish.name_he : dish.name_en || dish.name_he;
   const description = lang === "he" ? dish.description_he : dish.description_en || dish.description_he;
   const chefNote = (dish as any).chef_note;
@@ -32,13 +36,21 @@ export function DishCard({ dish, lang }: DishCardProps) {
         onClick={() => setOpen(true)}
       >
         {thumbnailUrl ? (
-          <div className="relative aspect-[16/10] overflow-hidden">
+          <div className="relative aspect-[16/10] overflow-hidden bg-muted">
+            {/* Shimmer skeleton shown while image loads */}
+            {!imgLoaded && (
+              <div className="absolute inset-0 skeleton-shimmer" />
+            )}
             <img
               src={thumbnailUrl}
               alt={name}
-              className="w-full h-full object-cover"
-              loading="lazy"
+              width={400}
+              height={250}
+              className={`w-full h-full object-cover transition-opacity duration-500 ease-out ${imgLoaded ? "opacity-100" : "opacity-0"}`}
+              loading={index < 4 ? "eager" : "lazy"}
               decoding="async"
+              fetchPriority={index < 2 ? "high" : "auto"}
+              onLoad={onImgLoad}
             />
             {badges.length > 0 && (
               <div className="absolute top-2 start-2 flex flex-wrap gap-1">
@@ -93,13 +105,21 @@ export function DishCard({ dish, lang }: DishCardProps) {
         </div>
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setDialogImgLoaded(false); }}>
         <DialogContent dir={lang === "he" ? "rtl" : "ltr"} className="max-w-md">
           <DialogHeader>
             <DialogTitle style={{ fontFamily: "'Playfair Display', serif" }}>{name}</DialogTitle>
           </DialogHeader>
           {fullImageUrl && (
-            <img src={fullImageUrl} alt={name} className="w-full h-48 object-cover rounded-lg" />
+            <div className="relative w-full h-48 overflow-hidden rounded-lg bg-muted">
+              {!dialogImgLoaded && <div className="absolute inset-0 skeleton-shimmer" />}
+              <img
+                src={fullImageUrl}
+                alt={name}
+                className={`w-full h-full object-cover transition-opacity duration-500 ease-out ${dialogImgLoaded ? "opacity-100" : "opacity-0"}`}
+                onLoad={() => setDialogImgLoaded(true)}
+              />
+            </div>
           )}
           <div className="space-y-3">
             <div className="flex items-center justify-between">

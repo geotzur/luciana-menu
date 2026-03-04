@@ -97,8 +97,8 @@ const Index = () => {
           </div>
         ) : (
           <div className="grid gap-4">
-            {visibleDishes.map((dish) => (
-              <DishCard key={dish.id} dish={dish} lang={lang} />
+            {visibleDishes.map((dish, i) => (
+              <DishCard key={dish.id} dish={dish} lang={lang} index={i} />
             ))}
 
             {/* Sentinel: triggers loading more dishes when scrolled near */}
