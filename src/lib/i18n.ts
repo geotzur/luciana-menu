@@ -35,6 +35,9 @@ export const translations = {
     uploadImage: 'העלה תמונה',
     back: 'חזרה',
     noResults: 'לא נמצאו מנות',
+    searchPlaceholder: 'חיפוש מנה...',
+    searchNoResults: 'לא נמצאו תוצאות',
+    clearSearch: 'נקה חיפוש',
   },
   en: {
     menu: 'Menu',
@@ -70,6 +73,9 @@ export const translations = {
     uploadImage: 'Upload Image',
     back: 'Back',
     noResults: 'No dishes found',
+    searchPlaceholder: 'Search dishes...',
+    searchNoResults: 'No results found',
+    clearSearch: 'Clear search',
   },
 } as const;
 
