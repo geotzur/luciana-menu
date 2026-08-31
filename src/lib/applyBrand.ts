@@ -6,7 +6,8 @@
  * Called once from main.tsx before React renders, so the first paint is
  * already the client's colours rather than a flash of someone else's.
  */
-import { brand, type BrandConfig } from "@/config/brand";
+import { brand, type BrandConfig, type BrandFonts } from "@/config/brand";
+import type { Language } from "@/lib/i18n";
 
 const COLOR_VARS: Array<[keyof BrandConfig["theme"], string]> = [
   ["background", "--background"],
@@ -32,6 +33,7 @@ export function applyBrand(config: BrandConfig = brand): void {
   const root = document.documentElement;
   const { theme, fonts, meta } = config;
 
+
   for (const [key, cssVar] of COLOR_VARS) {
     root.style.setProperty(cssVar, theme[key] as string);
   }
@@ -51,12 +53,7 @@ export function applyBrand(config: BrandConfig = brand): void {
   root.style.setProperty("--brand-primary", theme.primary);
   root.style.setProperty("--brand-accent", theme.accent);
 
-  root.style.setProperty("--font-body", fonts.body);
-  root.style.setProperty("--font-heading", fonts.heading);
-  root.style.setProperty("--font-heading-weight", String(fonts.headingWeight));
-  root.style.setProperty("--font-heading-tracking", fonts.headingTracking);
-  root.style.setProperty("--font-heading-transform", fonts.headingUppercase ? "uppercase" : "none");
-  root.style.setProperty("--font-base-size", fonts.baseSize);
+  applyBrandLanguage(config.defaultLanguage, config);
 
   // Lets CSS branch on light vs dark for things variables can't express,
   // such as the high-contrast accessibility override.
@@ -81,6 +78,28 @@ export function applyBrand(config: BrandConfig = brand): void {
   setMeta("property", "og:description", meta.description);
   setMeta("name", "twitter:title", meta.title);
   setMeta("name", "twitter:description", meta.description);
+}
+
+/**
+ * Applies the typography tokens for one language.
+ *
+ * A bilingual menu can pair a Hebrew face with a different Latin one, each with
+ * its own tracking and casing -- Casa Vina sets Hebrew in Heebo and English in
+ * Oswald uppercase. Anything a language does not override falls back to the
+ * config's base font settings.
+ */
+export function applyBrandLanguage(lang: Language, config: BrandConfig = brand): void {
+  const base = config.fonts;
+  const f: BrandFonts = { ...base, ...(base.byLanguage?.[lang] ?? {}) };
+  const root = document.documentElement;
+
+  root.style.setProperty("--font-body", f.body);
+  root.style.setProperty("--font-heading", f.heading);
+  root.style.setProperty("--font-heading-weight", String(f.headingWeight));
+  root.style.setProperty("--font-heading-tracking", f.headingTracking);
+  root.style.setProperty("--font-heading-transform", f.headingUppercase ? "uppercase" : "none");
+  root.style.setProperty("--font-base-size", f.baseSize);
+  root.style.setProperty("--font-wordmark", f.wordmark ?? f.heading);
 }
 
 function setMeta(attr: "name" | "property", key: string, value: string): void {

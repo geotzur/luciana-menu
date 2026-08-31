@@ -84,10 +84,16 @@ export function DishCard({ dish, lang, index = 0 }: DishCardProps) {
   let card: JSX.Element;
 
   if (layout === "photo-first") {
-    // Large edge-to-edge photo, text beneath, no card chrome.
+    // Large edge-to-edge photo, text beneath, no card chrome. Until photography
+    // exists the photo is gone and consecutive dishes would run together, so
+    // borrow the list layout's hairline rule; it disappears once images are on.
     card = (
       <article
-        className={cn("dish-card group", enableDishDialog && "cursor-pointer")}
+        className={cn(
+          "dish-card group",
+          !showImages && "border-b border-border pb-5",
+          enableDishDialog && "cursor-pointer"
+        )}
         onClick={openDialog}
       >
         {image}

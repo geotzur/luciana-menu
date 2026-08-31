@@ -152,12 +152,83 @@ import.
 ## 2. Load the menu
 
 Log in at `/admin/login`, go to the Excel upload tab and upload the client's
-menu file. The importer matches column headers loosely (Hebrew or English),
-auto-translates Hebrew names to English, and detects vegan / vegetarian /
-gluten-free / spicy from keywords in the text. Review the parsed preview before
-confirming the import.
+menu file. The importer matches column headers loosely (Hebrew or English) and
+detects vegan / vegetarian / gluten-free / spicy from keywords in the text.
+Review the parsed preview before confirming the import.
+
+### Casa Vina menu file — what to check
+
+`casa_vina_menu_1.xlsx` parses to **79 dishes across 9 categories**: בוקר,
+פתיחה וראשונות, דגים, פסטות, סלטים, מהטאבון, שתייה חמה, בירות בקבוק,
+משקאות קלים.
+
+Four things in that file need a human decision. None of them block the import.
+
+1. **The milkshake price is a guess.** Row 82 carries `28` with the description
+   *"המחיר לא הופיע בבירור בקובץ המקור - נא לוודא"*. That description is an
+   internal note and **will be shown to customers** on the public menu — clear
+   it once the real price is confirmed.
+
+2. **Three drinks list two prices in an order that looks reversed.** The
+   importer keeps the first number, so these would go live as the left-hand
+   value:
+
+   | Dish | Cell | Imported as |
+   | --- | --- | --- |
+   | אספרסו // כפול | `12 // 10` | ₪12 |
+   | מקיאטו // כפול | `12 // 10` | ₪12 |
+   | הפוך קטן // גדול | `16 // 14` | ₪16 |
+
+   In each case the cheaper option is named first but priced second, so the
+   single espresso would be sold at the double's price. Confirm the intended
+   pairing before going live.
+
+   `ארוחת בוקר` (`79 יחיד // 149 זוג`) is the same pattern but reads correctly
+   at ₪79; only the couple's price is dropped, since `dishes.price` is a single
+   numeric column.
+
+3. **There is no English content.** The file has no `name_en` or
+   `description_en` columns, so switching the menu to English gives English
+   interface chrome with Hebrew dish names. The brand book specifies Oswald for
+   English, so English is clearly intended — supply the two extra columns, or
+   set `showLanguageSwitcher: false` in `src/config/brand.ts` until they exist.
+
+4. **No dish photography yet.** `showImages` is `false`, so the photo-first
+   layout renders as clean name/price/description rows separated by hairline
+   rules. Flip it to `true` once images are uploaded and the layout becomes the
+   intended photo-led design.
+
+### Header-row detection
+
+The file opens with a title row, an allergen disclaimer and a blank spacer
+before the real header. The importer used to take the first non-empty row as
+the header, which picked up the title and then failed to map any column. It now
+scans for the first row that actually resolves both required columns
+(`src/lib/menuColumns.ts`, covered by `src/test/menu-columns.test.ts`).
 
 ## 3. Brand the app
+
+### Casa Vina specifics
+
+- **Palette** — `#F1F1F0` off-white ground, `#424126` dark olive text,
+  `#735b4b` brown for prices, the active category pill and the wordmark, and
+  `#d3dbe0` pale blue-grey for inactive pills. Every pairing the UI actually
+  uses was checked against WCAG AA at body size; the lowest is 5.58:1.
+- **Type** — Hebrew in Heebo, English in Oswald uppercase, both from Google
+  Fonts. Tracking follows the brand book's per-mille figures: `0.01em` for
+  Heebo, `0.1em` for Oswald. The two faces are applied per language at runtime
+  by `applyBrandLanguage()`.
+- **The brand book's "Heebo at 90% width" is not applied.** CSS has no faithful
+  equivalent: Heebo ships no width axis, and a `scaleX(0.9)` transform distorts
+  the letterforms and breaks layout metrics. If the 90% condensing matters to
+  the client, the honest fix is a genuinely condensed Hebrew face rather than a
+  squashed Heebo.
+- **The logo is not in the repo yet.** `logo` is `null`, so `BrandLogo` renders
+  the wordmark in Prata — a high-contrast serif chosen to sit close to the real
+  mark. Drop the PNG into `src/assets/casa-vina-logo.png` and set `logo` to the
+  import to replace it.
+
+### Every field
 
 All of it is in `src/config/brand.ts`:
 

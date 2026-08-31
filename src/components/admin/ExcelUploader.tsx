@@ -6,6 +6,13 @@ import { useToast } from "@/hooks/use-toast";
 import { Upload, FileSpreadsheet, Check, Loader2, AlertTriangle } from "lucide-react";
 import * as XLSX from "xlsx";
 import { ImportImagesButton } from "./ImportImagesButton";
+import {
+  CATEGORY_HEADERS,
+  NAME_HE_HEADERS,
+  detectHeaderRow,
+  findColumn,
+  normalizeRow,
+} from "@/lib/menuColumns";
 
 interface ParsedDish {
   category: string;
@@ -57,50 +64,19 @@ export function ExcelUploader({ onUpdate }: { onUpdate: () => void }) {
           return;
         }
 
-        const headerRowIndex = matrix.findIndex((row) =>
-          row.some((cell) => String(cell ?? "").trim() !== "")
-        );
+        const headerRowIndex = detectHeaderRow(matrix);
 
         if (headerRowIndex === -1) {
           toast({ title: "שגיאה", description: "לא נמצאה שורת כותרות בקובץ", variant: "destructive" });
           return;
         }
 
-        const headers = (matrix[headerRowIndex] || []).map((h) => String(h ?? "").trim());
+        const normalizedHeaders = normalizeRow(matrix[headerRowIndex]);
 
-        const normalize = (value: string) =>
-          value
-            .toLowerCase()
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .replace(/[\s_\/()\-]+/g, " ")
-            .trim();
+        const findColIndex = (possibleNames: string[]) => findColumn(normalizedHeaders, possibleNames);
 
-        const normalizedHeaders = headers.map(normalize);
-
-        const findColIndex = (possibleNames: string[]) => {
-          const normalizedNames = possibleNames.map(normalize);
-
-          for (const name of normalizedNames) {
-            const exactIndex = normalizedHeaders.indexOf(name);
-            if (exactIndex !== -1) return exactIndex;
-          }
-
-          for (const name of normalizedNames) {
-            const startsWithIndex = normalizedHeaders.findIndex((h) => h.startsWith(name));
-            if (startsWithIndex !== -1) return startsWithIndex;
-          }
-
-          for (const name of normalizedNames) {
-            const containsIndex = normalizedHeaders.findIndex((h) => h.includes(name));
-            if (containsIndex !== -1) return containsIndex;
-          }
-
-          return -1;
-        };
-
-        const colCategory = findColIndex(["קטגוריה", "category"]);
-        const colNameHe = findColIndex(["שם המנה / משקה", "שם המנה", "שם משקה", "שם מנה", "שם", "name_he", "dish name", "name"]);
+        const colCategory = findColIndex(CATEGORY_HEADERS);
+        const colNameHe = findColIndex(NAME_HE_HEADERS);
         const colNameEn = findColIndex(["name_en", "שם באנגלית", "english name", "english"]);
         const colDescHe = findColIndex(["מרכיבים / תיאור", "מרכיבים", "תיאור", "description_he", "description"]);
         const colDescEn = findColIndex(["description_en", "תיאור באנגלית"]);

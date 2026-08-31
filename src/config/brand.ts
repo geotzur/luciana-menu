@@ -70,6 +70,17 @@ export interface BrandFonts {
    * when the fonts are self-hosted from /public/fonts.
    */
   stylesheetUrl?: string;
+  /**
+   * Face used for the typographic wordmark when no logo image is configured.
+   * Defaults to `heading` when unset.
+   */
+  wordmark?: string;
+  /**
+   * Per-language typography. A bilingual menu often pairs a Hebrew face with a
+   * different Latin one, each with its own tracking and casing. Whatever a
+   * language omits falls back to the values above.
+   */
+  byLanguage?: Partial<Record<Language, Partial<Omit<BrandFonts, "byLanguage" | "stylesheetUrl">>>>;
 }
 
 /**
@@ -122,63 +133,82 @@ export interface BrandConfig {
 // ---------------------------------------------------------------------------
 
 export const brand: BrandConfig = {
-  key: "new-client",
+  key: "casa-vina",
 
-  // TODO: replace with the client's real name once confirmed.
-  name: { he: "המסעדה", en: "The Restaurant" },
-  tagline: { he: "תפריט", en: "Menu" },
+  name: { he: "CASA VINA", en: "CASA VINA" },
+  tagline: { he: "תפריט", en: "MENU" },
 
-  // TODO: drop the client's logo into src/assets and import it here, e.g.
-  //   import clientLogo from "@/assets/client-logo.png";
-  //   logo: clientLogo,
-  // Until then the header falls back to a typographic wordmark.
+  // TODO: drop the supplied logo PNG into src/assets and import it here:
+  //   import casaVinaLogo from "@/assets/casa-vina-logo.png";
+  //   logo: casaVinaLogo,
+  // Until then BrandLogo renders the wordmark in Prata, which closely matches
+  // the high-contrast serif of the real mark.
   logo: null,
 
   defaultLanguage: "he",
 
-  // Big edge-to-edge dish photos, single column, text beneath the image.
   layout: "photo-first",
   headerStyle: "left",
 
+  // Brand palette, verified for WCAG AA at body size on every pairing used:
+  //   #F1F1F0 off-white   #d3dbe0 pale blue-grey
+  //   #735b4b brown       #424126 dark olive
   theme: {
     mode: "light",
-    background: "40 20% 97%",
-    foreground: "24 12% 12%",
+    background: "60 3% 94%",        // #F1F1F0
+    foreground: "58 27% 20%",       // #424126
     card: "0 0% 100%",
-    cardForeground: "24 12% 12%",
+    cardForeground: "58 27% 20%",
     popover: "0 0% 100%",
-    popoverForeground: "24 12% 12%",
-    // Warm terracotta — appetising against food photography, and nothing
-    // like Luciana's gold.
-    primary: "12 72% 47%",
-    primaryForeground: "0 0% 100%",
-    secondary: "36 24% 92%",
-    secondaryForeground: "24 12% 20%",
-    muted: "36 20% 90%",
-    mutedForeground: "24 8% 42%",
-    accent: "12 60% 94%",
-    accentForeground: "12 72% 38%",
-    border: "36 16% 86%",
-    input: "36 16% 86%",
-    ring: "12 72% 47%",
-    radius: "1rem",
+    popoverForeground: "58 27% 20%",
+    primary: "24 21% 37%",          // #735b4b, the logo brown
+    primaryForeground: "60 3% 96%",
+    secondary: "203 17% 85%",       // #d3dbe0
+    secondaryForeground: "58 27% 20%",
+    muted: "60 4% 90%",
+    mutedForeground: "58 12% 34%",
+    accent: "203 17% 90%",
+    accentForeground: "24 21% 32%",
+    border: "60 5% 86%",
+    input: "60 5% 86%",
+    ring: "24 21% 37%",
+    radius: "0.5rem",
   },
 
+  // Brand spec: Hebrew set in Heebo, English in Oswald uppercase.
+  // Tracking is given in the brand book as per-mille of the em (the Illustrator
+  // convention), so 10 -> 0.01em for Heebo and 100 -> 0.1em for Oswald.
+  //
+  // The book also asks for Heebo at 90% horizontal width. CSS has no faithful
+  // equivalent -- Heebo ships no width axis, and a scaleX() transform distorts
+  // the letterforms and breaks layout metrics -- so it is deliberately not
+  // applied. See SETUP-NEW-CLIENT.md.
   fonts: {
-    // Assistant is self-hosted from /public/fonts and covers Hebrew properly —
-    // unlike Playfair Display, which has no Hebrew glyphs and silently falls
-    // back mid-heading on the Luciana build.
-    body: "'Assistant', system-ui, sans-serif",
-    heading: "'Assistant', system-ui, sans-serif",
-    headingWeight: 800,
-    headingTracking: "-0.01em",
-    headingUppercase: true,
+    body: "'Heebo', system-ui, sans-serif",
+    heading: "'Heebo', system-ui, sans-serif",
+    headingWeight: 700,
+    headingTracking: "0.01em",
+    headingUppercase: false,
     baseSize: "17px",
+    wordmark: "'Prata', Georgia, serif",
+    stylesheetUrl:
+      "https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&family=Oswald:wght@300;400;500;600&family=Prata&display=swap",
+    byLanguage: {
+      en: {
+        body: "'Oswald', system-ui, sans-serif",
+        heading: "'Oswald', system-ui, sans-serif",
+        headingWeight: 500,
+        headingTracking: "0.1em",
+        headingUppercase: true,
+      },
+    },
   },
 
   features: {
     showPrices: true,
-    showImages: true,
+    // No dish photography supplied yet. The photo-first layout degrades to
+    // clean name/price/description blocks until this is switched back on.
+    showImages: false,
     showDietaryBadges: true,
     showSearch: true,
     showCategoryNav: true,
@@ -189,7 +219,7 @@ export const brand: BrandConfig = {
   },
 
   meta: {
-    title: "תפריט",
-    description: "התפריט שלנו",
+    title: "CASA VINA | תפריט",
+    description: "התפריט של CASA VINA",
   },
 };

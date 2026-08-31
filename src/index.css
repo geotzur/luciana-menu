@@ -46,55 +46,56 @@
    * overwrites every one of them at runtime — brand.ts is the source of truth.
    */
   :root {
-    --background: 40 20% 97%;
-    --foreground: 24 12% 12%;
+    --background: 60 3% 94%;
+    --foreground: 58 27% 20%;
 
     --card: 0 0% 100%;
-    --card-foreground: 24 12% 12%;
+    --card-foreground: 58 27% 20%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 24 12% 12%;
+    --popover-foreground: 58 27% 20%;
 
-    --primary: 12 72% 47%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 24 21% 37%;
+    --primary-foreground: 60 3% 96%;
 
-    --secondary: 36 24% 92%;
-    --secondary-foreground: 24 12% 20%;
+    --secondary: 203 17% 85%;
+    --secondary-foreground: 58 27% 20%;
 
-    --muted: 36 20% 90%;
-    --muted-foreground: 24 8% 42%;
+    --muted: 60 4% 90%;
+    --muted-foreground: 58 12% 34%;
 
-    --accent: 12 60% 94%;
-    --accent-foreground: 12 72% 38%;
+    --accent: 203 17% 90%;
+    --accent-foreground: 24 21% 32%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 36 16% 86%;
-    --input: 36 16% 86%;
-    --ring: 12 72% 47%;
+    --border: 60 5% 86%;
+    --input: 60 5% 86%;
+    --ring: 24 21% 37%;
 
-    --radius: 1rem;
+    --radius: 0.5rem;
 
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 24 12% 12%;
-    --sidebar-primary: 12 72% 47%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 36 24% 92%;
-    --sidebar-accent-foreground: 24 12% 20%;
-    --sidebar-border: 36 16% 86%;
-    --sidebar-ring: 12 72% 47%;
+    --sidebar-foreground: 58 27% 20%;
+    --sidebar-primary: 24 21% 37%;
+    --sidebar-primary-foreground: 60 3% 96%;
+    --sidebar-accent: 203 17% 85%;
+    --sidebar-accent-foreground: 58 27% 20%;
+    --sidebar-border: 60 5% 86%;
+    --sidebar-ring: 24 21% 37%;
 
-    --brand-primary: 12 72% 47%;
-    --brand-accent: 12 60% 94%;
+    --brand-primary: 24 21% 37%;
+    --brand-accent: 203 17% 90%;
 
     /* Typography tokens, driven by BrandFonts in src/config/brand.ts. */
-    --font-body: 'Assistant', system-ui, sans-serif;
-    --font-heading: 'Assistant', system-ui, sans-serif;
-    --font-heading-weight: 800;
-    --font-heading-tracking: -0.01em;
-    --font-heading-transform: uppercase;
+    --font-body: 'Heebo', system-ui, sans-serif;
+    --font-heading: 'Heebo', system-ui, sans-serif;
+    --font-heading-weight: 700;
+    --font-heading-tracking: 0.01em;
+    --font-heading-transform: none;
     --font-base-size: 17px;
+    --font-wordmark: 'Prata', Georgia, serif;
   }
 }
 

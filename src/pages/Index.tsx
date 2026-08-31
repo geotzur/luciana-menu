@@ -5,6 +5,7 @@ import { DishCard } from "@/components/menu/DishCard";
 import { useCategories, useDishes } from "@/hooks/useMenu";
 import { Language, t } from "@/lib/i18n";
 import { brand } from "@/config/brand";
+import { applyBrandLanguage } from "@/lib/applyBrand";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { Search, X } from "lucide-react";
@@ -54,6 +55,12 @@ const Index = () => {
     });
   }, [rawDishes, searchQuery, categoryNameMap]);
 
+  // Hebrew and English can be set in different faces with different tracking,
+  // so the typography tokens follow the active language.
+  useEffect(() => {
+    applyBrandLanguage(lang);
+  }, [lang]);
+
   // Reset visible count when category changes or new dishes load
   useEffect(() => {
     setVisibleCount(BATCH_SIZE);
@@ -84,9 +91,12 @@ const Index = () => {
   const isRtl = lang === "he";
 
   // Photo-first cards are tall and unboxed, so they need more air than the
-  // compact boxed grid; the text-only list needs the least.
-  const gridGap = brand.layout === "photo-first" ? "gap-10" : "gap-4";
-  const skeletonHeight = brand.layout === "photo-first" ? "h-80" : brand.layout === "list" ? "h-24" : "h-64";
+  // compact boxed grid; the text-only list needs the least. With images turned
+  // off the tall photo is gone, so that generous gap would just read as a
+  // sparse, unstructured page.
+  const photoFirstWithImages = brand.layout === "photo-first" && brand.features.showImages;
+  const gridGap = photoFirstWithImages ? "gap-10" : brand.layout === "list" ? "gap-4" : "gap-6";
+  const skeletonHeight = photoFirstWithImages ? "h-80" : brand.layout === "grid" ? "h-64" : "h-24";
 
   return (
     <div

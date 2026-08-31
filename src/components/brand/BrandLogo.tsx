@@ -49,14 +49,14 @@ export function BrandLogo({ lang, size = "md", className }: BrandLogoProps) {
   return (
     <div className={cn("flex flex-col items-center leading-none", className)}>
       <span
-        className={cn(NAME_SIZE[size], "font-extrabold tracking-[0.08em] text-foreground")}
-        style={{ fontFamily: "var(--font-heading)", textTransform: "var(--font-heading-transform)" as never }}
+        className={cn(NAME_SIZE[size], "tracking-[0.08em] text-primary whitespace-nowrap")}
+        style={{ fontFamily: "var(--font-wordmark, var(--font-heading))" }}
       >
         {name}
       </span>
       {tagline && (
         <span
-          className={cn(TAGLINE_SIZE[size], "mt-1 tracking-[0.2em] text-primary uppercase")}
+          className={cn(TAGLINE_SIZE[size], "mt-1 tracking-[0.2em] text-muted-foreground uppercase")}
         >
           {tagline}
         </span>
