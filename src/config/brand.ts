@@ -147,7 +147,7 @@ export const brand: BrandConfig = {
   defaultLanguage: "he",
 
   layout: "photo-first",
-  headerStyle: "left",
+  headerStyle: "centered",
 
   // Brand palette, verified for WCAG AA at body size on every pairing used:
   //   #F1F1F0 off-white   #d3dbe0 pale blue-grey
