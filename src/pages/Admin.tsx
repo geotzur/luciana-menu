@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useCategories, useAllDishes } from "@/hooks/useMenu";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Pencil, Trash2, LogOut, Eye, Search, ImageDown, Languages, Sparkles } from "lucide-react";
+import { Plus, Pencil, Trash2, LogOut, Eye, Search, ImageDown, Languages, Sparkles, ShieldAlert } from "lucide-react";
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { ExcelUploader } from "@/components/admin/ExcelUploader";
@@ -55,6 +55,9 @@ export default function Admin() {
     queryClient.invalidateQueries({ queryKey: ["dishes"] });
   };
 
+  // What the database actually sees for this session.
+  const appClaim = user?.app_metadata?.app ?? "";
+
   if (!user) return null;
 
   return (
@@ -77,6 +80,38 @@ export default function Admin() {
       </header>
 
       <main className="max-w-5xl mx-auto p-4 space-y-6">
+        {/*
+          This project is shared with another application, so write access is
+          gated on an `app` claim rather than merely being signed in. Without it
+          every save fails with an opaque "violates row-level security policy"
+          from PostgREST, which looks like a bug in the app. Read the claim
+          straight off the live session -- that is exactly what the database
+          sees -- and say what to do about it.
+        */}
+        {appClaim !== "menu" && (
+          <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 space-y-2">
+            <div className="flex items-center gap-2 text-destructive font-semibold">
+              <ShieldAlert className="h-5 w-5" />
+              <span>לחשבון זה אין הרשאת עריכה</span>
+            </div>
+            <p className="text-sm text-foreground/80">
+              המשתמש <span className="font-mono">{user.email}</span> מחובר, אך תביעת ההרשאה
+              שלו היא <span className="font-mono">{appClaim || "(ריקה)"}</span> במקום{" "}
+              <span className="font-mono">menu</span>. כל שמירה או ייבוא ייכשלו עם שגיאת
+              row-level security. הריצו ב-SQL editor:
+            </p>
+            <pre className="text-xs bg-background/70 border border-border rounded p-3 overflow-x-auto" dir="ltr">
+{`update auth.users
+set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb)
+                        || '{"app":"menu"}'::jsonb
+where id = '${user.id}';`}
+            </pre>
+            <p className="text-sm text-foreground/80">
+              לאחר מכן התנתקו והתחברו מחדש — התביעה נצרבת לתוך הטוקן ברגע ההתחברות.
+            </p>
+          </div>
+        )}
+
         <Tabs defaultValue="dishes">
           <TabsList className="w-full">
             <TabsTrigger value="dishes" className="flex-1">מנות</TabsTrigger>
