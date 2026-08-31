@@ -111,10 +111,19 @@ If step 2 shows your admin account as `(none)`, grant it the menu role and sign
 in again:
 
 ```sql
+-- Grant by id, taken from: select id, email from auth.users;
+-- Matching on a pasted email that does not exist updates nothing and still
+-- reports success, which is the usual reason this appears not to work.
 update auth.users
 set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb)
                         || '{"app":"menu"}'::jsonb
-where email = 'your-admin@example.com';
+where id = 'paste-the-id-here';
+```
+
+Then sign out and back in, and confirm with:
+
+```sql
+select id, email, raw_app_meta_data ->> 'app' as app_claim from auth.users;
 ```
 
 Without that claim the import fails at the first insert with a row-level
