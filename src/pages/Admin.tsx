@@ -14,7 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useCategories, useAllDishes } from "@/hooks/useMenu";
 import { useQueryClient } from "@tanstack/react-query";
 import { Plus, Pencil, Trash2, LogOut, Eye, Search, ImageDown, Languages, Sparkles } from "lucide-react";
-import lucianaLogo from "@/assets/luciana-logo.png";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { ExcelUploader } from "@/components/admin/ExcelUploader";
 import { getProxiedImageUrl } from "@/lib/imageUtils";
@@ -62,7 +62,7 @@ export default function Admin() {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
         <div className="flex items-center justify-between px-4 py-3 max-w-5xl mx-auto">
           <div className="flex items-center gap-3">
-            <img src={lucianaLogo} alt="Luciana" className="h-8 object-contain" />
+            <BrandLogo lang="he" size="sm" />
             <span className="text-foreground font-semibold">ניהול תפריט</span>
           </div>
           <div className="flex items-center gap-2">

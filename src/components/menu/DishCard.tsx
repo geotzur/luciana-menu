@@ -1,8 +1,11 @@
 import { useState, useCallback } from "react";
 import { Language, t } from "@/lib/i18n";
 import type { Dish } from "@/hooks/useMenu";
-import { Leaf, WheatOff, Flame, Sprout, ChefHat } from "lucide-react";
+import { ChefHat } from "lucide-react";
+import { brand } from "@/config/brand";
+import { getDishBadges, type DishBadge } from "@/lib/dishBadges";
 import { getProxiedImageUrl } from "@/lib/imageUtils";
+import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface DishCardProps {
@@ -11,104 +14,169 @@ interface DishCardProps {
   index?: number;
 }
 
+function BadgeRow({ badges, className }: { badges: DishBadge[]; className?: string }) {
+  if (badges.length === 0) return null;
+  return (
+    <div className={cn("flex flex-wrap gap-1", className)}>
+      {badges.map((b) => (
+        <span
+          key={b.label}
+          className={cn(
+            "inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold",
+            b.className
+          )}
+        >
+          {b.icon && <b.icon className="w-3 h-3" />}
+          {b.label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export function DishCard({ dish, lang, index = 0 }: DishCardProps) {
   const [open, setOpen] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
   const [dialogImgLoaded, setDialogImgLoaded] = useState(false);
   const onImgLoad = useCallback(() => setImgLoaded(true), []);
+
+  const { showPrices, showImages, showChefNotes, enableDishDialog } = brand.features;
+  const layout = brand.layout;
+
   const name = lang === "he" ? dish.name_he : dish.name_en || dish.name_he;
   const description = lang === "he" ? dish.description_he : dish.description_en || dish.description_he;
-  const chefNote = (dish as any).chef_note;
-  const thumbnailUrl = getProxiedImageUrl(dish.image_url, 'thumbnail');
-  const fullImageUrl = getProxiedImageUrl(dish.image_url, 'full');
+  const chefNote = showChefNotes ? dish.chef_note : null;
+  const thumbnailUrl = showImages ? getProxiedImageUrl(dish.image_url, "thumbnail") : null;
+  const fullImageUrl = showImages ? getProxiedImageUrl(dish.image_url, "full") : null;
+  const badges = getDishBadges(dish, lang);
 
-  const badges = [];
-  if (dish.is_new) badges.push({ label: t(lang, "newDish"), icon: null, color: "bg-primary text-primary-foreground" });
-  if (dish.is_vegan) badges.push({ label: t(lang, "vegan"), icon: Leaf, color: "bg-green-900/60 text-green-300" });
-  if (dish.is_vegetarian) badges.push({ label: t(lang, "vegetarian"), icon: Sprout, color: "bg-emerald-900/60 text-emerald-300" });
-  if (dish.is_gluten_free) badges.push({ label: t(lang, "glutenFree"), icon: WheatOff, color: "bg-amber-900/60 text-amber-300" });
-  if (dish.is_spicy) badges.push({ label: t(lang, "spicy"), icon: Flame, color: "bg-red-900/60 text-red-300" });
+  const price = showPrices ? `${t(lang, "price")}${dish.price}` : null;
+  const chefNoteLabel = lang === "he" ? "דבר השף" : "Chef's Note";
+  const openDialog = () => enableDishDialog && setOpen(true);
 
-  return (
-    <>
-      <div
-        className="dish-card group bg-card rounded-xl overflow-hidden border border-border hover:border-primary/30 transition-colors duration-300 cursor-pointer"
-        onClick={() => setOpen(true)}
-      >
-        {thumbnailUrl ? (
-          <div className="relative aspect-[16/10] overflow-hidden bg-muted">
-            {/* Shimmer skeleton shown while image loads */}
-            {!imgLoaded && (
-              <div className="absolute inset-0 skeleton-shimmer" />
-            )}
-            <img
-              src={thumbnailUrl}
-              alt={name}
-              width={400}
-              height={250}
-              className={`w-full h-full object-cover transition-opacity duration-500 ease-out ${imgLoaded ? "opacity-100" : "opacity-0"}`}
-              loading={index < 4 ? "eager" : "lazy"}
-              decoding="async"
-              fetchPriority={index < 2 ? "high" : "auto"}
-              onLoad={onImgLoad}
-            />
-            {badges.length > 0 && (
-              <div className="absolute top-2 start-2 flex flex-wrap gap-1">
-                {badges.map((b) => (
-                  <span
-                    key={b.label}
-                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${b.color}`}
-                  >
-                    {b.icon && <b.icon className="w-3 h-3" />}
-                    {b.label}
-                  </span>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          badges.length > 0 && (
-            <div className="flex flex-wrap gap-1 px-4 pt-4">
-              {badges.map((b) => (
-                <span
-                  key={b.label}
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${b.color}`}
-                >
-                  {b.icon && <b.icon className="w-3 h-3" />}
-                  {b.label}
-                </span>
-              ))}
-            </div>
-          )
+  const image = thumbnailUrl && (
+    <div
+      className={cn(
+        "relative overflow-hidden bg-muted",
+        layout === "photo-first" ? "aspect-[4/3] rounded-lg" : "aspect-[16/10]"
+      )}
+    >
+      {/* Shimmer skeleton shown while image loads */}
+      {!imgLoaded && <div className="absolute inset-0 skeleton-shimmer" />}
+      <img
+        src={thumbnailUrl}
+        alt={name}
+        width={800}
+        height={600}
+        className={cn(
+          "w-full h-full object-cover transition-opacity duration-500 ease-out",
+          imgLoaded ? "opacity-100" : "opacity-0"
         )}
+        loading={index < 4 ? "eager" : "lazy"}
+        decoding="async"
+        fetchPriority={index < 2 ? "high" : "auto"}
+        onLoad={onImgLoad}
+      />
+      <BadgeRow badges={badges} className="absolute top-2 start-2" />
+    </div>
+  );
 
-        <div className="p-4 space-y-2">
-          <div className="flex items-start justify-between gap-3">
-            <h3 className="font-bold text-2xl text-foreground leading-tight" style={{ fontFamily: "'Playfair Display', serif" }}>
-              {name}
-            </h3>
-            <span className="shrink-0 text-primary font-bold text-2xl">
-              {t(lang, "price")}{dish.price}
-            </span>
+  let card: JSX.Element;
+
+  if (layout === "photo-first") {
+    // Large edge-to-edge photo, text beneath, no card chrome.
+    card = (
+      <article
+        className={cn("dish-card group", enableDishDialog && "cursor-pointer")}
+        onClick={openDialog}
+      >
+        {image}
+        {!thumbnailUrl && <BadgeRow badges={badges} className="mb-2" />}
+        <div className="pt-3 space-y-1.5">
+          <div className="flex items-baseline justify-between gap-3">
+            <h3 className="dish-title text-xl text-foreground">{name}</h3>
+            {price && <span className="shrink-0 text-primary font-extrabold text-xl">{price}</span>}
           </div>
           {description && (
-            <p className="text-muted-foreground text-lg leading-relaxed">
-              {description}
-            </p>
+            <p className="text-muted-foreground text-base leading-relaxed">{description}</p>
+          )}
+          {chefNote && (
+            <div className="flex items-center gap-1.5 text-primary/80 text-sm pt-0.5">
+              <ChefHat className="w-4 h-4" />
+              <span>{chefNoteLabel}</span>
+            </div>
+          )}
+        </div>
+      </article>
+    );
+  } else if (layout === "list") {
+    // Text-only rows split by thin dividers.
+    card = (
+      <article
+        className={cn(
+          "dish-card group border-b border-border pb-4",
+          enableDishDialog && "cursor-pointer"
+        )}
+        onClick={openDialog}
+      >
+        <div className="flex items-baseline justify-between gap-3">
+          <h3 className="dish-title text-lg text-foreground">{name}</h3>
+          {price && <span className="shrink-0 text-primary font-bold text-lg">{price}</span>}
+        </div>
+        {description && (
+          <p className="text-muted-foreground text-base leading-relaxed mt-1">{description}</p>
+        )}
+        <BadgeRow badges={badges} className="mt-2" />
+        {chefNote && (
+          <div className="flex items-center gap-1.5 text-primary/80 text-sm mt-1.5">
+            <ChefHat className="w-4 h-4" />
+            <span>{chefNoteLabel}</span>
+          </div>
+        )}
+      </article>
+    );
+  } else {
+    // "grid" — boxed card, image on top.
+    card = (
+      <article
+        className={cn(
+          "dish-card group bg-card rounded-lg overflow-hidden border border-border",
+          "hover:border-primary/30 transition-colors duration-300",
+          enableDishDialog && "cursor-pointer"
+        )}
+        onClick={openDialog}
+      >
+        {image}
+        {!thumbnailUrl && <BadgeRow badges={badges} className="px-4 pt-4" />}
+        <div className="p-4 space-y-2">
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="dish-title text-2xl text-foreground">{name}</h3>
+            {price && <span className="shrink-0 text-primary font-bold text-2xl">{price}</span>}
+          </div>
+          {description && (
+            <p className="text-muted-foreground text-lg leading-relaxed">{description}</p>
           )}
           {chefNote && (
             <div className="flex items-center gap-1.5 text-primary/70 text-base mt-1">
               <ChefHat className="w-4 h-4" />
-              <span>{lang === "he" ? "דבר השף" : "Chef's Note"}</span>
+              <span>{chefNoteLabel}</span>
             </div>
           )}
         </div>
-      </div>
+      </article>
+    );
+  }
+
+  if (!enableDishDialog) return card;
+
+  return (
+    <>
+      {card}
 
       <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setDialogImgLoaded(false); }}>
         <DialogContent dir={lang === "he" ? "rtl" : "ltr"} className="max-w-md">
           <DialogHeader>
-            <DialogTitle style={{ fontFamily: "'Playfair Display', serif" }}>{name}</DialogTitle>
+            <DialogTitle className="dish-title">{name}</DialogTitle>
           </DialogHeader>
           {fullImageUrl && (
             <div className="relative w-full h-48 overflow-hidden rounded-lg bg-muted">
@@ -116,25 +184,21 @@ export function DishCard({ dish, lang, index = 0 }: DishCardProps) {
               <img
                 src={fullImageUrl}
                 alt={name}
-                className={`w-full h-full object-cover transition-opacity duration-500 ease-out ${dialogImgLoaded ? "opacity-100" : "opacity-0"}`}
+                className={cn(
+                  "w-full h-full object-cover transition-opacity duration-500 ease-out",
+                  dialogImgLoaded ? "opacity-100" : "opacity-0"
+                )}
                 onLoad={() => setDialogImgLoaded(true)}
               />
             </div>
           )}
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-primary font-bold text-2xl">{t(lang, "price")}{dish.price}</span>
-              {badges.length > 0 && (
-                <div className="flex flex-wrap gap-1">
-                  {badges.map((b) => (
-                    <span key={b.label} className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${b.color}`}>
-                      {b.icon && <b.icon className="w-3 h-3" />}
-                      {b.label}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
+            {(price || badges.length > 0) && (
+              <div className="flex items-center justify-between">
+                {price && <span className="text-primary font-bold text-2xl">{price}</span>}
+                <BadgeRow badges={badges} />
+              </div>
+            )}
             {description && (
               <p className="text-muted-foreground text-base leading-relaxed">{description}</p>
             )}
@@ -142,7 +206,7 @@ export function DishCard({ dish, lang, index = 0 }: DishCardProps) {
               <div className="bg-muted/50 rounded-lg p-3 border border-border">
                 <div className="flex items-center gap-2 text-primary font-medium text-base mb-1">
                   <ChefHat className="w-5 h-5" />
-                  <span>{lang === "he" ? "דבר השף" : "Chef's Note"}</span>
+                  <span>{chefNoteLabel}</span>
                 </div>
                 <p className="text-foreground/80 text-base leading-relaxed">{chefNote}</p>
               </div>

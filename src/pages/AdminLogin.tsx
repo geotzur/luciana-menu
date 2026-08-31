@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import lucianaLogo from "@/assets/luciana-logo.png";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
@@ -31,7 +31,7 @@ export default function AdminLogin() {
     <div dir="rtl" className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <img src={lucianaLogo} alt="Luciana" className="h-12 mx-auto mb-4 object-contain" />
+          <BrandLogo lang="he" size="lg" className="mb-4" />
           <CardTitle className="text-xl">כניסת מנהל</CardTitle>
         </CardHeader>
         <CardContent>

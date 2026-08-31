@@ -4,6 +4,7 @@ import { CategoryNav } from "@/components/menu/CategoryNav";
 import { DishCard } from "@/components/menu/DishCard";
 import { useCategories, useDishes } from "@/hooks/useMenu";
 import { Language, t } from "@/lib/i18n";
+import { brand } from "@/config/brand";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { Search, X } from "lucide-react";
@@ -11,7 +12,7 @@ import { Search, X } from "lucide-react";
 const BATCH_SIZE = 6;
 
 const Index = () => {
-  const [lang, setLang] = useState<Language>("he");
+  const [lang, setLang] = useState<Language>(brand.defaultLanguage);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [isLargeText, setIsLargeText] = useState(false);
   const [isHighContrast, setIsHighContrast] = useState(false);
@@ -44,8 +45,8 @@ const Index = () => {
         dish.name_en,
         dish.description_he,
         dish.description_en,
-        (dish as any).chef_note,
-        (dish as any).chef_note_en,
+        dish.chef_note,
+        dish.chef_note_en,
         catNames?.he,
         catNames?.en,
       ];
@@ -82,6 +83,11 @@ const Index = () => {
   const hasMore = visibleCount < dishes.length;
   const isRtl = lang === "he";
 
+  // Photo-first cards are tall and unboxed, so they need more air than the
+  // compact boxed grid; the text-only list needs the least.
+  const gridGap = brand.layout === "photo-first" ? "gap-10" : "gap-4";
+  const skeletonHeight = brand.layout === "photo-first" ? "h-80" : brand.layout === "list" ? "h-24" : "h-64";
+
   return (
     <div
       dir={isRtl ? "rtl" : "ltr"}
@@ -100,22 +106,24 @@ const Index = () => {
         isHighContrast={isHighContrast}
       />
 
-      {catsLoading ? (
-        <div className="flex gap-2 px-4 py-3">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-9 w-24 rounded-full" />
-          ))}
-        </div>
-      ) : (
-        <CategoryNav
-          categories={categories}
-          activeCategory={activeCategory}
-          onSelect={setActiveCategory}
-          lang={lang}
-        />
-      )}
+      {brand.features.showCategoryNav &&
+        (catsLoading ? (
+          <div className="flex gap-2 px-4 py-3">
+            {[1, 2, 3, 4].map((i) => (
+              <Skeleton key={i} className="h-9 w-24 rounded-full" />
+            ))}
+          </div>
+        ) : (
+          <CategoryNav
+            categories={categories}
+            activeCategory={activeCategory}
+            onSelect={setActiveCategory}
+            lang={lang}
+          />
+        ))}
 
       {/* Search bar */}
+      {brand.features.showSearch && (
       <div className="px-4 pt-4 pb-1 max-w-2xl mx-auto">
         <div className="relative">
           <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -137,12 +145,13 @@ const Index = () => {
           )}
         </div>
       </div>
+      )}
 
       <main className="px-4 py-6 pb-20 max-w-2xl mx-auto">
         {dishesLoading ? (
-          <div className="grid gap-4">
+          <div className={cn("grid", gridGap)}>
             {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-64 rounded-xl" />
+              <Skeleton key={i} className={cn("rounded-lg", skeletonHeight)} />
             ))}
           </div>
         ) : dishes.length === 0 ? (
@@ -164,7 +173,7 @@ const Index = () => {
             )}
           </div>
         ) : (
-          <div className="grid gap-4">
+          <div className={cn("grid", gridGap)}>
             {visibleDishes.map((dish, i) => (
               <DishCard key={dish.id} dish={dish} lang={lang} index={i} />
             ))}
