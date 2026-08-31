@@ -66,6 +66,48 @@ project that hosts only the menu.
 
 2. **Restart the dev server** — Vite only reads `.env` at startup.
 
+### Pre-import checklist
+
+Paste this into the `noham` SQL editor before importing the menu. It reads only,
+and every row should say `PASS`.
+
+```sql
+-- 1. The price_text migration landed.
+select 'price_text column exists' as check,
+       case when exists (
+         select 1 from information_schema.columns
+         where table_schema = 'public' and table_name = 'dishes' and column_name = 'price_text'
+       ) then 'PASS' else 'FAIL - run 20260831130000_add_price_text.sql' end as result;
+
+-- 2. Every account carries exactly one app claim. The menu administrator must
+--    show 'menu'; the youth-app account must show 'noham'. An account showing
+--    '(none)' can reach nothing until its claim is set.
+select coalesce(raw_app_meta_data ->> 'app', '(none)') as app_claim,
+       count(*) as accounts
+from auth.users
+group by 1
+order by 1;
+
+-- 3. The menu tables exist and are empty, ready for the first import.
+select 'menu tables ready' as check,
+       case when (select count(*) from public.categories) >= 0
+             and (select count(*) from public.dishes) >= 0
+       then 'PASS' else 'FAIL' end as result;
+```
+
+If step 2 shows your admin account as `(none)`, grant it the menu role and sign
+in again:
+
+```sql
+update auth.users
+set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb)
+                        || '{"app":"menu"}'::jsonb
+where email = 'your-admin@example.com';
+```
+
+Without that claim the import fails at the first insert with a row-level
+security error -- that is the lockdown working, not a bug.
+
 ### Checking the isolation yourself
 
 Paste this into the `noham` SQL editor at any time. It impersonates each kind of
