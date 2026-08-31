@@ -58,7 +58,13 @@ function TitleRow({
     <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
       <h3 className={cn("dish-title text-foreground min-w-0 flex-1 basis-[60%]", nameClass)}>{name}</h3>
       {price && (
-        <span className={cn("shrink-0 whitespace-nowrap text-primary", priceClass)}>{price}</span>
+        // ms-auto keeps the price on the far edge even when it wraps onto its
+        // own line: justify-between would otherwise leave a lone item at the
+        // line start, putting a wrapped price under the name on the opposite
+        // side from every other dish's price.
+        <span className={cn("shrink-0 whitespace-nowrap text-primary ms-auto", priceClass)}>
+          {price}
+        </span>
       )}
     </div>
   );
