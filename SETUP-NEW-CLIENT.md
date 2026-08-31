@@ -39,21 +39,17 @@ project that hosts only the menu.
 - Verified by simulating tokens: a `menu` account sees 0 of 10 youths, 0 of 3
   documents and 0 of 11 expenses, while the `noham` account still sees all of
   them and is *not* a menu admin.
+- `.env` and `supabase/config.toml` point at `noham`, with the project's real
+  anon key in place.
+
+  `.env` is committed to this repository, so that key is in git history. It is
+  designed to be public and RLS is what actually protects the data — but if you
+  would rather it not be in the repo, add `.env` to `.gitignore` and set the
+  three variables in your host's environment settings instead.
 
 ### Still to do
 
-1. **Paste the anon key.** `.env` currently has a placeholder. Copy the
-   **anon / publishable key** from Project Settings → API in the `noham`
-   project into `VITE_SUPABASE_PUBLISHABLE_KEY`. The other two values are
-   already correct.
-
-   `.env` is committed to this repository, so whatever you put here lands in git
-   history. The anon key is designed to be public and RLS is what actually
-   protects the data — but if you would rather it not be in the repo, add `.env`
-   to `.gitignore` and set the three variables in your host's environment
-   settings instead.
-
-2. **Create the menu administrator.** Under **Authentication → Users**, add the
+1. **Create the menu administrator.** Under **Authentication → Users**, add the
    account that will log in at `/admin`. A new account has no `app` claim, so it
    starts with access to *nothing* — which is the safe default. Grant it the
    menu role in the SQL editor:
@@ -68,7 +64,55 @@ project that hosts only the menu.
    The claim is baked into the token at issue time, so the user must sign in
    again afterwards for it to take effect.
 
-3. **Restart the dev server** — Vite only reads `.env` at startup.
+2. **Restart the dev server** — Vite only reads `.env` at startup.
+
+### Checking the isolation yourself
+
+Paste this into the `noham` SQL editor at any time. It impersonates each kind of
+caller inside a transaction that is rolled back, so it changes nothing. Every
+row should read `PASS`.
+
+```sql
+begin;
+set local role authenticated;
+set local request.jwt.claims =
+  '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated","app_metadata":{"app":"menu"}}';
+select 'menu admin cannot see youths' as check,
+       case when (select count(*) from public.youths) = 0 then 'PASS' else 'FAIL' end as result;
+rollback;
+
+begin;
+set local role authenticated;
+set local request.jwt.claims =
+  '{"sub":"432a5cab-3cab-45db-8df5-32d77bace844","role":"authenticated","app_metadata":{"app":"noham"}}';
+select 'noham user keeps youths' as check,
+       case when (select count(*) from public.youths) > 0 then 'PASS' else 'FAIL' end as result;
+select 'noham user is not menu admin' as check,
+       case when public.is_admin() = false then 'PASS' else 'FAIL' end as result;
+rollback;
+
+-- A stale token issued before the claim was set: covered by the safety net.
+begin;
+set local role authenticated;
+set local request.jwt.claims =
+  '{"sub":"432a5cab-3cab-45db-8df5-32d77bace844","role":"authenticated","app_metadata":{"provider":"email"}}';
+select 'pre-claim token still works' as check,
+       case when (select count(*) from public.youths) > 0 then 'PASS' else 'FAIL' end as result;
+rollback;
+
+-- Any other account with no claim must reach nothing.
+begin;
+set local role authenticated;
+set local request.jwt.claims =
+  '{"sub":"99999999-9999-9999-9999-999999999999","role":"authenticated","app_metadata":{}}';
+select 'unknown account is locked out' as check,
+       case when (select count(*) from public.youths) = 0 and public.is_admin() = false
+            then 'PASS' else 'FAIL' end as result;
+rollback;
+```
+
+The last two are the cases that were still unverified when the tooling dropped
+mid-session; run them once before treating the lockdown as fully proven.
 
 ### Removing the transitional safety net
 
