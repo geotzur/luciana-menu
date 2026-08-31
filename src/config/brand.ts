@@ -138,14 +138,11 @@ export const brand: BrandConfig = {
   name: { he: "CASA VINA", en: "CASA VINA" },
   tagline: { he: "תפריט", en: "MENU" },
 
-  // Two ways to supply the mark, whichever is easier:
-  //   1. Put the PNG in public/ and set:  logo: "/casa-vina-logo.png"
-  //      (no code build step; BrandLogo falls back to the wordmark if missing)
-  //   2. Bundle it:  import casaVinaLogo from "@/assets/casa-vina-logo.png";
-  //                  logo: casaVinaLogo,
-  // Until then BrandLogo renders the wordmark in Prata, a high-contrast serif
-  // chosen to sit close to the real mark.
-  logo: null,
+  // Served from public/. The supplied artwork was a 1081px square whose mark
+  // filled only a quarter of the height, which would have rendered around 10px
+  // tall in the header, so the transparent margin is trimmed off in the file
+  // itself. BrandLogo falls back to the Prata wordmark if this ever 404s.
+  logo: "/casa-vina-logo.png",
 
   defaultLanguage: "he",
 
