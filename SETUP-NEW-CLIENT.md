@@ -162,41 +162,53 @@ Review the parsed preview before confirming the import.
 פתיחה וראשונות, דגים, פסטות, סלטים, מהטאבון, שתייה חמה, בירות בקבוק,
 משקאות קלים.
 
-Four things in that file need a human decision. None of them block the import.
+Confirmed with the client:
 
-1. **The milkshake price is a guess.** Row 82 carries `28` with the description
-   *"המחיר לא הופיע בבירור בקובץ המקור - נא לוודא"*. That description is an
-   internal note and **will be shown to customers** on the public menu — clear
-   it once the real price is confirmed.
+- **Milkshake is ₪28.** The "verify this price" note that shipped in the
+  description column has been cleared, so it will not reach customers.
+- **The paired prices are correct, not reversed.** Those dishes are sold in two
+  options -- espresso or double, cappuccino small or large, breakfast for one or
+  for two -- and both prices are real. See below.
+- **English is coming later**, to be machine-translated once the Hebrew menu is
+  live. The language switcher stays on.
 
-2. **Three drinks list two prices in an order that looks reversed.** The
-   importer keeps the first number, so these would go live as the left-hand
-   value:
+### Dishes sold in two sizes
 
-   | Dish | Cell | Imported as |
-   | --- | --- | --- |
-   | אספרסו // כפול | `12 // 10` | ₪12 |
-   | מקיאטו // כפול | `12 // 10` | ₪12 |
-   | הפוך קטן // גדול | `16 // 14` | ₪16 |
+`dishes.price` is a single numeric column, so a cell like `12 // 10` used to
+import as ₪12 and the second option never reached the customer.
 
-   In each case the cheaper option is named first but priced second, so the
-   single espresso would be sold at the double's price. Confirm the intended
-   pairing before going live.
+`dishes.price_text` now holds a display string for these, and the menu shows it
+in place of the numeric price when it is non-empty:
 
-   `ארוחת בוקר` (`79 יחיד // 149 זוג`) is the same pattern but reads correctly
-   at ₪79; only the couple's price is dropped, since `dishes.price` is a single
-   numeric column.
+| Dish | Cell | Shown as |
+| --- | --- | --- |
+| ארוחת בוקר | `79 יחיד // 149 זוג` | ₪79 יחיד / ₪149 זוג |
+| אספרסו // כפול | `12 // 10` | ₪12 / ₪10 |
+| מקיאטו // כפול | `12 // 10` | ₪12 / ₪10 |
+| הפוך קטן // גדול | `16 // 14` | ₪16 / ₪14 |
 
-3. **There is no English content.** The file has no `name_en` or
-   `description_en` columns, so switching the menu to English gives English
-   interface chrome with Hebrew dish names. The brand book specifies Oswald for
-   English, so English is clearly intended — supply the two extra columns, or
-   set `showLanguageSwitcher: false` in `src/config/brand.ts` until they exist.
+`price` still holds the first number, so sorting and any future filtering keep
+working. The importer fills `price_text` automatically for any cell holding more
+than one option (`formatPriceOptions` in `src/lib/menuColumns.ts`), and the
+admin form exposes it as *מחיר לתצוגה* for hand editing.
 
-4. **No dish photography yet.** `showImages` is `false`, so the photo-first
-   layout renders as clean name/price/description rows separated by hairline
-   rules. Flip it to `true` once images are uploaded and the layout becomes the
-   intended photo-led design.
+**This needs a migration applied to `noham`** -- see
+`supabase/migrations/20260831130000_add_price_text.sql`. It was written while
+the Supabase tooling was disconnected, so unlike the earlier five it has **not**
+been applied yet. Run it in the SQL editor before importing:
+
+```sql
+alter table public.dishes add column if not exists price_text text default '';
+```
+
+Without it the import fails with a PostgREST schema-cache error naming
+`price_text`.
+
+### No dish photography yet
+
+`showImages` is `false`, so the photo-first layout renders as clean
+name/price/description rows separated by hairline rules. Flip it to `true` once
+images are uploaded and the layout becomes the intended photo-led design.
 
 ### Header-row detection
 

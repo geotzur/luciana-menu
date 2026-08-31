@@ -70,6 +70,7 @@ export type Database = {
           name_en: string
           name_he: string
           price: number
+          price_text: string | null
           updated_at: string
         }
         Insert: {
@@ -91,6 +92,7 @@ export type Database = {
           name_en?: string
           name_he: string
           price?: number
+          price_text?: string | null
           updated_at?: string
         }
         Update: {
@@ -112,6 +114,7 @@ export type Database = {
           name_en?: string
           name_he?: string
           price?: number
+          price_text?: string | null
           updated_at?: string
         }
         Relationships: [

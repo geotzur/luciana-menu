@@ -4,7 +4,9 @@ import {
   NAME_HE_HEADERS,
   detectHeaderRow,
   findColumn,
+  formatPriceOptions,
   normalizeRow,
+  parsePrice,
 } from "@/lib/menuColumns";
 
 // The shape of the Casa Vina export: a title, an allergen disclaimer, a blank
@@ -56,5 +58,45 @@ describe("column mapping on the detected row", () => {
     const titleRow = normalizeRow(CASA_VINA[0]);
     expect(findColumn(titleRow, CATEGORY_HEADERS)).toBe(-1);
     expect(findColumn(titleRow, NAME_HE_HEADERS)).toBe(-1);
+  });
+});
+
+describe("price parsing", () => {
+  it("reads a plain price", () => {
+    expect(parsePrice("74")).toBe(74);
+    expect(parsePrice("26.5")).toBe(26.5);
+  });
+
+  it("takes the first option as the numeric price", () => {
+    expect(parsePrice("12 // 10")).toBe(12);
+    expect(parsePrice("79 יחיד // 149 זוג")).toBe(79);
+  });
+
+  it("falls back to 0 for an unusable cell", () => {
+    expect(parsePrice("")).toBe(0);
+    expect(parsePrice("לפי משקל")).toBe(0);
+  });
+});
+
+describe("formatPriceOptions", () => {
+  it("returns empty for a single price, so the numeric column is used", () => {
+    expect(formatPriceOptions("74")).toBe("");
+    expect(formatPriceOptions("")).toBe("");
+  });
+
+  it("renders both options for a dish sold in two sizes", () => {
+    // Espresso / double and cappuccino small / large: both prices must reach
+    // the customer, not just the first.
+    expect(formatPriceOptions("12 // 10")).toBe("₪12 / ₪10");
+    expect(formatPriceOptions("16 // 14")).toBe("₪16 / ₪14");
+  });
+
+  it("keeps descriptive words and only prefixes the numbers", () => {
+    expect(formatPriceOptions("79 יחיד // 149 זוג")).toBe("₪79 יחיד / ₪149 זוג");
+  });
+
+  it("accepts a single slash or pipe as the separator", () => {
+    expect(formatPriceOptions("12 / 10")).toBe("₪12 / ₪10");
+    expect(formatPriceOptions("12 | 10")).toBe("₪12 / ₪10");
   });
 });

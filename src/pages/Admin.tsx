@@ -212,7 +212,7 @@ function DishManager({ dishes, categories, onUpdate }: { dishes: Dish[]; categor
 
   const emptyForm = useMemo(() => ({
     name_he: "", name_en: "", description_he: "", description_en: "",
-    price: 0, category_id: "", is_available: true, is_vegan: false,
+    price: 0, price_text: "", category_id: "", is_available: true, is_vegan: false,
     is_gluten_free: false, is_spicy: false, is_vegetarian: false, is_new: false, display_order: 0, image_url: "", chef_note: "", chef_note_en: "",
   }), []);
   const [form, setForm] = useState(emptyForm);
@@ -319,7 +319,7 @@ function DishManager({ dishes, categories, onUpdate }: { dishes: Dish[]; categor
     setEditing(dish);
     setForm({
       name_he: dish.name_he, name_en: dish.name_en, description_he: dish.description_he || "",
-      description_en: dish.description_en || "", price: dish.price, category_id: dish.category_id,
+      description_en: dish.description_en || "", price: dish.price, price_text: dish.price_text || "", category_id: dish.category_id,
       is_available: dish.is_available, is_vegan: dish.is_vegan, is_gluten_free: dish.is_gluten_free,
       is_spicy: dish.is_spicy, is_vegetarian: dish.is_vegetarian, is_new: dish.is_new,
       display_order: dish.display_order, image_url: dish.image_url || "",
@@ -372,6 +372,17 @@ function DishManager({ dishes, categories, onUpdate }: { dishes: Dish[]; categor
 
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>מחיר (₪)</Label><Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: +e.target.value })} /></div>
+                <div>
+                  <Label>מחיר לתצוגה (אופציונלי)</Label>
+                  <Input
+                    value={form.price_text}
+                    onChange={(e) => setForm({ ...form, price_text: e.target.value })}
+                    placeholder="לדוגמה: ₪12 / ₪10"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    למנה שנמכרת בשתי אפשרויות. אם מולא, יוצג במקום המחיר המספרי.
+                  </p>
+                </div>
                 <div>
                   <Label>קטגוריה</Label>
                   <Select value={form.category_id} onValueChange={(v) => setForm({ ...form, category_id: v })}>
@@ -445,7 +456,7 @@ function DishManager({ dishes, categories, onUpdate }: { dishes: Dish[]; categor
               <div className="flex-1 min-w-0">
                 <div className="font-medium text-foreground truncate">{dish.name_he}</div>
                 <div className="text-sm text-muted-foreground">
-                  {(dish as any).categories?.name_he} · ₪{dish.price}
+                  {(dish as any).categories?.name_he} · {dish.price_text?.trim() || `₪${dish.price}`}
                 </div>
               </div>
               <div className="flex items-center gap-1">

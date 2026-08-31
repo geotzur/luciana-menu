@@ -50,7 +50,9 @@ export function DishCard({ dish, lang, index = 0 }: DishCardProps) {
   const fullImageUrl = showImages ? getProxiedImageUrl(dish.image_url, "full") : null;
   const badges = getDishBadges(dish, lang);
 
-  const price = showPrices ? `${t(lang, "price")}${dish.price}` : null;
+  // A dish sold in two sizes carries its own display string ("₪12 / ₪10");
+  // everything else falls back to the single numeric price.
+  const price = showPrices ? dish.price_text?.trim() || `${t(lang, "price")}${dish.price}` : null;
   const chefNoteLabel = lang === "he" ? "דבר השף" : "Chef's Note";
   const openDialog = () => enableDishDialog && setOpen(true);
 
@@ -101,7 +103,7 @@ export function DishCard({ dish, lang, index = 0 }: DishCardProps) {
         <div className="pt-3 space-y-1.5">
           <div className="flex items-baseline justify-between gap-3">
             <h3 className="dish-title text-xl text-foreground">{name}</h3>
-            {price && <span className="shrink-0 text-primary font-extrabold text-xl">{price}</span>}
+            {price && <span className="shrink-0 text-primary font-extrabold text-xl whitespace-nowrap">{price}</span>}
           </div>
           {description && (
             <p className="text-muted-foreground text-base leading-relaxed">{description}</p>

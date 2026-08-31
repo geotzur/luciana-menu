@@ -11,7 +11,9 @@ import {
   NAME_HE_HEADERS,
   detectHeaderRow,
   findColumn,
+  formatPriceOptions,
   normalizeRow,
+  parsePrice,
 } from "@/lib/menuColumns";
 
 interface ParsedDish {
@@ -21,6 +23,7 @@ interface ParsedDish {
   description_he: string;
   description_en: string;
   price: number;
+  price_text: string;
   image_url: string;
   chef_note: string;
   is_vegan: boolean;
@@ -145,7 +148,6 @@ export function ExcelUploader({ onUpdate }: { onUpdate: () => void }) {
           };
 
           const priceRaw = String(getVal(colPrice) || "0");
-          const primaryPrice = priceRaw.split(/[\/|]/)[0];
           const imageUrl =
             extractFirstUrl(getCellHyperlink(sheetRowIndex, colImage)) ||
             extractFirstUrl(getVal(colImage)) ||
@@ -157,7 +159,9 @@ export function ExcelUploader({ onUpdate }: { onUpdate: () => void }) {
             name_en: String(row[colNameEn] || "").trim(),
             description_he: String(row[colDescHe] || "").trim(),
             description_en: String(row[colDescEn] || "").trim(),
-            price: parseFloat(String(row[colPrice] || "0").split("/")[0].replace(/[^\d.]/g, "")) || 0,
+            price: parsePrice(priceRaw),
+            // Non-empty only when the cell offers several options, e.g. "12 // 10".
+            price_text: formatPriceOptions(priceRaw),
             image_url: String(row[colImage] || "").trim(),
             chef_note: String(row[colChefNote] || "").trim(),
             is_vegan: parseBool(row[colVegan]),
@@ -205,6 +209,7 @@ export function ExcelUploader({ onUpdate }: { onUpdate: () => void }) {
         description_he: d.description_he,
         description_en: d.description_en,
         price: d.price,
+        price_text: d.price_text,
         category_id: categoryMap.get(d.category)!,
         image_url: d.image_url || null,
         chef_note: d.chef_note,
@@ -284,7 +289,7 @@ export function ExcelUploader({ onUpdate }: { onUpdate: () => void }) {
                   <tr key={i} className="border-t border-border">
                     <td className="p-2 text-muted-foreground">{d.category}</td>
                     <td className="p-2">{d.name_he}</td>
-                    <td className="p-2">₪{d.price}</td>
+                    <td className="p-2">{d.price_text || `₪${d.price}`}</td>
                     <td className="p-2">{d.image_url ? "✓" : "—"}</td>
                   </tr>
                 ))}

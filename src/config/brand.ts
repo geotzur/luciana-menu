@@ -138,11 +138,13 @@ export const brand: BrandConfig = {
   name: { he: "CASA VINA", en: "CASA VINA" },
   tagline: { he: "תפריט", en: "MENU" },
 
-  // TODO: drop the supplied logo PNG into src/assets and import it here:
-  //   import casaVinaLogo from "@/assets/casa-vina-logo.png";
-  //   logo: casaVinaLogo,
-  // Until then BrandLogo renders the wordmark in Prata, which closely matches
-  // the high-contrast serif of the real mark.
+  // Two ways to supply the mark, whichever is easier:
+  //   1. Put the PNG in public/ and set:  logo: "/casa-vina-logo.png"
+  //      (no code build step; BrandLogo falls back to the wordmark if missing)
+  //   2. Bundle it:  import casaVinaLogo from "@/assets/casa-vina-logo.png";
+  //                  logo: casaVinaLogo,
+  // Until then BrandLogo renders the wordmark in Prata, a high-contrast serif
+  // chosen to sit close to the real mark.
   logo: null,
 
   defaultLanguage: "he",

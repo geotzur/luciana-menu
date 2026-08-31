@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { brand } from "@/config/brand";
 import type { Language } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
@@ -33,15 +34,20 @@ const TAGLINE_SIZE = {
  * one-line change in the config.
  */
 export function BrandLogo({ lang, size = "md", className }: BrandLogoProps) {
+  // `logo` may be a bundled import or a runtime path such as "/logo.png" served
+  // from /public. A path that 404s would otherwise show a broken-image icon in
+  // the header, so fall back to the wordmark instead.
+  const [logoFailed, setLogoFailed] = useState(false);
   const name = lang === "he" ? brand.name.he : brand.name.en;
   const tagline = brand.tagline ? (lang === "he" ? brand.tagline.he : brand.tagline.en) : null;
 
-  if (brand.logo) {
+  if (brand.logo && !logoFailed) {
     return (
       <img
         src={brand.logo}
         alt={name}
         className={cn(IMAGE_SIZE[size], "object-contain", className)}
+        onError={() => setLogoFailed(true)}
       />
     );
   }
