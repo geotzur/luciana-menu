@@ -55,14 +55,26 @@ project that hosts only the menu.
    menu role in the SQL editor:
 
    ```sql
+   -- Look first: this shows every account and the claim it currently carries.
+   select id, email, raw_app_meta_data ->> 'app' as app_claim from auth.users;
+
+   -- Then grant, keyed on the id from above.
    update auth.users
    set raw_app_meta_data = coalesce(raw_app_meta_data, '{}'::jsonb)
                            || '{"app":"menu"}'::jsonb
-   where email = 'admin@example.com';
+   where id = 'paste-the-id-here';
    ```
 
-   The claim is baked into the token at issue time, so the user must sign in
-   again afterwards for it to take effect.
+   **Key it on `id`, not a pasted email.** An `update ... where email =
+   'admin@example.com'` matches no rows and still reports success, so the claim
+   silently never gets set and every import keeps failing with a row-level
+   security error. Re-run the `select` afterwards and confirm the row reads
+   `menu`.
+
+   The claim is baked into the token at issue time, so the user must sign out
+   and sign in again afterwards for it to take effect. The admin page shows a
+   red banner naming the current claim whenever it is not `menu`, so you do not
+   have to guess.
 
 2. **Restart the dev server** — Vite only reads `.env` at startup.
 
