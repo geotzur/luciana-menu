@@ -123,7 +123,7 @@ const Index = () => {
     <div
       dir={isRtl ? "rtl" : "ltr"}
       className={cn(
-        "min-h-screen bg-background",
+        "min-h-screen bg-background overflow-x-clip",
         isLargeText && "large-text",
         isHighContrast && "high-contrast"
       )}
@@ -180,7 +180,7 @@ const Index = () => {
 
       <main className="px-4 py-6 pb-20 max-w-2xl mx-auto">
         {dishesLoading ? (
-          <div className={cn("grid", gridGap)}>
+          <div className={cn("grid grid-cols-1", gridGap)}>
             {[1, 2, 3].map((i) => (
               <Skeleton key={i} className={cn("rounded-lg", skeletonHeight)} />
             ))}
@@ -222,7 +222,7 @@ const Index = () => {
             )}
           </div>
         ) : (
-          <div className={cn("grid", gridGap)}>
+          <div className={cn("grid grid-cols-1", gridGap)}>
             {visibleDishes.map((dish, i) => (
               <DishCard key={dish.id} dish={dish} lang={lang} index={i} />
             ))}

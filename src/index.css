@@ -148,11 +148,23 @@
   line-height: 1.15;
 }
 
-/* Scroll performance: skip rendering off-screen dish cards */
-.dish-card {
-  content-visibility: auto;
-  contain-intrinsic-size: auto 500px;
-}
+/*
+ * `content-visibility: auto` with `contain-intrinsic-size: auto 500px` used to
+ * live here to skip rendering off-screen dish cards. It was removed because it
+ * caused two visible faults on real phones:
+ *
+ *   - The intrinsic size applies to BOTH axes, so a skipped card claimed to be
+ *     500px wide. Chromium still sized the grid column from the container, but
+ *     Safari let that placeholder widen the column past the viewport, so the
+ *     menu overflowed sideways and text was cut off at the inline edge.
+ *   - The guessed height rarely matched the real one, so the page visibly
+ *     jumped as cards rendered during scrolling.
+ *
+ * The payoff never justified that: the dish list is already batched six at a
+ * time behind an IntersectionObserver, which is what actually bounds the DOM.
+ * If it is ever reinstated, constrain the block axis only
+ * (`contain-intrinsic-block-size`), never both.
+ */
 
 /* Shimmer skeleton for loading images */
 .skeleton-shimmer {
