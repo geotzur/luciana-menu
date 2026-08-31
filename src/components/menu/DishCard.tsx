@@ -34,6 +34,36 @@ function BadgeRow({ badges, className }: { badges: DishBadge[]; className?: stri
   );
 }
 
+/**
+ * Dish name and price on one line, price aligned to the far edge.
+ *
+ * The price is nowrap and never shrinks -- a multi-option string like
+ * "₪79 יחיד / ₪149 זוג" is 200px wide, which on a 360px phone left barely a
+ * third of the row for the name and wrapped it mid-phrase. Giving the name a
+ * 60% flex basis and letting the row wrap drops the price onto its own line
+ * when it cannot sit comfortably beside the name, instead of crushing it.
+ */
+function TitleRow({
+  name,
+  price,
+  nameClass,
+  priceClass,
+}: {
+  name: string;
+  price: string | null;
+  nameClass: string;
+  priceClass: string;
+}) {
+  return (
+    <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+      <h3 className={cn("dish-title text-foreground min-w-0 flex-1 basis-[60%]", nameClass)}>{name}</h3>
+      {price && (
+        <span className={cn("shrink-0 whitespace-nowrap text-primary", priceClass)}>{price}</span>
+      )}
+    </div>
+  );
+}
+
 export function DishCard({ dish, lang, index = 0 }: DishCardProps) {
   const [open, setOpen] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
@@ -101,10 +131,7 @@ export function DishCard({ dish, lang, index = 0 }: DishCardProps) {
         {image}
         {!thumbnailUrl && <BadgeRow badges={badges} className="mb-2" />}
         <div className="pt-3 space-y-1.5">
-          <div className="flex items-baseline justify-between gap-3">
-            <h3 className="dish-title text-xl text-foreground">{name}</h3>
-            {price && <span className="shrink-0 text-primary font-extrabold text-xl whitespace-nowrap">{price}</span>}
-          </div>
+          <TitleRow name={name} price={price} nameClass="text-xl" priceClass="text-xl font-extrabold" />
           {description && (
             <p className="text-muted-foreground text-base leading-relaxed">{description}</p>
           )}
@@ -127,10 +154,7 @@ export function DishCard({ dish, lang, index = 0 }: DishCardProps) {
         )}
         onClick={openDialog}
       >
-        <div className="flex items-baseline justify-between gap-3">
-          <h3 className="dish-title text-lg text-foreground">{name}</h3>
-          {price && <span className="shrink-0 text-primary font-bold text-lg">{price}</span>}
-        </div>
+        <TitleRow name={name} price={price} nameClass="text-lg" priceClass="text-lg font-bold" />
         {description && (
           <p className="text-muted-foreground text-base leading-relaxed mt-1">{description}</p>
         )}
@@ -157,10 +181,7 @@ export function DishCard({ dish, lang, index = 0 }: DishCardProps) {
         {image}
         {!thumbnailUrl && <BadgeRow badges={badges} className="px-4 pt-4" />}
         <div className="p-4 space-y-2">
-          <div className="flex items-start justify-between gap-3">
-            <h3 className="dish-title text-2xl text-foreground">{name}</h3>
-            {price && <span className="shrink-0 text-primary font-bold text-2xl">{price}</span>}
-          </div>
+          <TitleRow name={name} price={price} nameClass="text-2xl" priceClass="text-2xl font-bold" />
           {description && (
             <p className="text-muted-foreground text-lg leading-relaxed">{description}</p>
           )}
@@ -202,7 +223,7 @@ export function DishCard({ dish, lang, index = 0 }: DishCardProps) {
           )}
           <div className="space-y-3">
             {(price || badges.length > 0) && (
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 {price && <span className="text-primary font-bold text-2xl">{price}</span>}
                 <BadgeRow badges={badges} />
               </div>

@@ -274,8 +274,9 @@ export function ExcelUploader({ onUpdate }: { onUpdate: () => void }) {
             </CardContent>
           </Card>
 
-          <div className="max-h-64 overflow-y-auto border border-border rounded-lg">
-            <table className="w-full text-sm">
+          {/* overflow-x so a long dish name scrolls the table rather than the page on a phone. */}
+          <div className="max-h-64 overflow-y-auto overflow-x-auto border border-border rounded-lg">
+            <table className="w-full text-sm min-w-[28rem]">
               <thead className="bg-muted sticky top-0">
                 <tr>
                   <th className="text-start p-2">קטגוריה</th>
