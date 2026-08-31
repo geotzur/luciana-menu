@@ -8,9 +8,17 @@ import { brand } from "@/config/brand";
 import { applyBrandLanguage } from "@/lib/applyBrand";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { Search, X } from "lucide-react";
+import { Search, X, AlertTriangle } from "lucide-react";
 
 const BATCH_SIZE = 6;
+
+const supabaseHost = (() => {
+  try {
+    return new URL(import.meta.env.VITE_SUPABASE_URL).host;
+  } catch {
+    return "VITE_SUPABASE_URL is not set";
+  }
+})();
 
 const Index = () => {
   const [lang, setLang] = useState<Language>(brand.defaultLanguage);
@@ -20,11 +28,24 @@ const Index = () => {
   const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const { data: categories = [], isLoading: catsLoading } = useCategories();
+  const {
+    data: categories = [],
+    isLoading: catsLoading,
+    error: catsError,
+    refetch: refetchCategories,
+  } = useCategories();
   // When searching, load all dishes (no category filter)
-  const { data: rawDishes = [], isLoading: dishesLoading } = useDishes(
-    searchQuery ? undefined : (activeCategory ?? undefined)
-  );
+  const {
+    data: rawDishes = [],
+    isLoading: dishesLoading,
+    error: dishesError,
+    refetch: refetchDishes,
+  } = useDishes(searchQuery ? undefined : (activeCategory ?? undefined));
+
+  // A failed request and an empty database both leave these arrays empty, so
+  // without this the "menu coming soon" screen hides genuine connection
+  // failures -- a misconfigured deploy looks exactly like an unpopulated one.
+  const loadError = catsError ?? dishesError;
 
   // Build a category name lookup for search matching
   const categoryNameMap = useMemo(() => {
@@ -164,10 +185,28 @@ const Index = () => {
               <Skeleton key={i} className={cn("rounded-lg", skeletonHeight)} />
             ))}
           </div>
+        ) : loadError ? (
+          <div className="text-center py-20">
+            <AlertTriangle className="w-8 h-8 mx-auto text-destructive mb-3" />
+            <p className="text-foreground text-lg font-semibold">{t(lang, "loadError")}</p>
+            <p className="text-muted-foreground text-sm mt-2">{t(lang, "loadErrorHint")}</p>
+            <p className="text-muted-foreground/70 text-xs mt-3 font-mono break-all" dir="ltr">
+              {(loadError as Error).message}
+            </p>
+            <p className="text-muted-foreground/50 text-xs mt-1 font-mono break-all" dir="ltr">
+              {supabaseHost}
+            </p>
+            <button
+              onClick={() => { refetchCategories(); refetchDishes(); }}
+              className="text-primary text-sm mt-4 hover:underline"
+            >
+              {t(lang, "retry")}
+            </button>
+          </div>
         ) : dishes.length === 0 ? (
           <div className="text-center py-20">
             <p className="text-muted-foreground text-lg">
-              {searchQuery ? t(lang, "searchNoResults") : t(lang, "noResults")}
+              {searchQuery ? t(lang, "searchNoResults") : t(lang, "emptyMenu")}
             </p>
             {searchQuery ? (
               <button

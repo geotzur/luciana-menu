@@ -38,6 +38,10 @@ export const translations = {
     searchPlaceholder: 'חיפוש מנה...',
     searchNoResults: 'לא נמצאו תוצאות',
     clearSearch: 'נקה חיפוש',
+    loadError: 'לא ניתן לטעון את התפריט',
+    loadErrorHint: 'החיבור למסד הנתונים נכשל. בדקו את הגדרות החיבור.',
+    retry: 'נסו שוב',
+    emptyMenu: 'התפריט עדיין ריק',
   },
   en: {
     menu: 'Menu',
@@ -76,6 +80,10 @@ export const translations = {
     searchPlaceholder: 'Search dishes...',
     searchNoResults: 'No results found',
     clearSearch: 'Clear search',
+    loadError: 'Could not load the menu',
+    loadErrorHint: 'The connection to the database failed. Check the connection settings.',
+    retry: 'Try again',
+    emptyMenu: 'The menu is empty',
   },
 } as const;
 
