@@ -210,7 +210,7 @@ function CategoryManager({ categories, onUpdate }: { categories: Category[]; onU
         </Dialog>
       </div>
 
-      <div className="grid gap-3">
+      <div className="grid grid-cols-1 gap-3">
         {categories.map((cat) => (
           <Card key={cat.id}>
             <CardContent className="flex items-center justify-between py-3 px-4">
@@ -405,7 +405,7 @@ function DishManager({ dishes, categories, onUpdate }: { dishes: Dish[]; categor
                 <Languages className="h-4 w-4" />{translating === "all" ? "מתרגם הכל..." : "תרגם הכל לאנגלית"}
               </Button>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div><Label>מחיר (₪)</Label><Input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: +e.target.value })} /></div>
                 <div>
                   <Label>מחיר לתצוגה (אופציונלי)</Label>
@@ -481,7 +481,7 @@ function DishManager({ dishes, categories, onUpdate }: { dishes: Dish[]; categor
         />
       </div>
 
-      <div className="grid gap-3">
+      <div className="grid grid-cols-1 gap-3">
         {dishes.filter((d) => !debouncedSearch || d.name_he.includes(debouncedSearch) || d.name_en.toLowerCase().includes(debouncedSearch.toLowerCase())).map((dish) => (
           <Card key={dish.id} className={!dish.is_available ? "opacity-50" : ""}>
             <CardContent className="flex items-center gap-3 py-3 px-4">
@@ -489,12 +489,12 @@ function DishManager({ dishes, categories, onUpdate }: { dishes: Dish[]; categor
                 <img src={getProxiedImageUrl(dish.image_url) || ""} alt="" className="w-12 h-12 object-cover rounded-md shrink-0" />
               )}
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-foreground truncate">{dish.name_he}</div>
-                <div className="text-sm text-muted-foreground">
+                <div className="font-medium text-foreground line-clamp-2">{dish.name_he}</div>
+                <div className="text-sm text-muted-foreground truncate">
                   {(dish as any).categories?.name_he} · {dish.price_text?.trim() || `₪${dish.price}`}
                 </div>
               </div>
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 shrink-0">
                 <Switch checked={dish.is_available} onCheckedChange={() => toggleAvailability(dish)} />
                 <Button variant="ghost" size="icon" onClick={() => openEdit(dish)}><Pencil className="h-4 w-4" /></Button>
                 <Button variant="ghost" size="icon" onClick={() => handleDelete(dish.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
