@@ -116,7 +116,10 @@ const Index = () => {
   // off the tall photo is gone, so that generous gap would just read as a
   // sparse, unstructured page.
   const photoFirstWithImages = brand.layout === "photo-first" && brand.features.showImages;
-  const gridGap = photoFirstWithImages ? "gap-10" : brand.layout === "list" ? "gap-4" : "gap-6";
+  // gap-8 rather than gap-10: photography is arriving dish by dish, so the list
+  // is a mix of tall photo cards and short text ones, and the wider gap left the
+  // text-only entries adrift.
+  const gridGap = photoFirstWithImages ? "gap-8" : brand.layout === "list" ? "gap-4" : "gap-6";
   const skeletonHeight = photoFirstWithImages ? "h-80" : brand.layout === "grid" ? "h-64" : "h-24";
 
   return (

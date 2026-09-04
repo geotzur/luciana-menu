@@ -205,9 +205,7 @@ export const brand: BrandConfig = {
 
   features: {
     showPrices: true,
-    // No dish photography supplied yet. The photo-first layout degrades to
-    // clean name/price/description blocks until this is switched back on.
-    showImages: false,
+    showImages: true,
     showDietaryBadges: true,
     showSearch: true,
     showCategoryNav: true,

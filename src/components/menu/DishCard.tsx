@@ -129,7 +129,7 @@ export function DishCard({ dish, lang, index = 0 }: DishCardProps) {
       <article
         className={cn(
           "dish-card group",
-          !showImages && "border-b border-border pb-5",
+          !thumbnailUrl && "border-b border-border pb-5",
           enableDishDialog && "cursor-pointer"
         )}
         onClick={openDialog}
