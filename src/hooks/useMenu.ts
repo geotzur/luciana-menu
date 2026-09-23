@@ -20,8 +20,9 @@ export function useCategories() {
   });
 }
 
-export function useDishes(categoryId?: string) {
+export function useDishes(categoryId?: string, enabled = true) {
   return useQuery({
+    enabled,
     queryKey: ["dishes", categoryId],
     queryFn: async () => {
       let query = supabase

@@ -22,7 +22,9 @@ const supabaseHost = (() => {
 
 const Index = () => {
   const [lang, setLang] = useState<Language>(brand.defaultLanguage);
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  // undefined: nothing chosen yet, so fall back to the first category;
+  // null: the visitor picked the "all dishes" pill; string: a chosen category.
+  const [activeCategory, setActiveCategory] = useState<string | null | undefined>(undefined);
   const [isLargeText, setIsLargeText] = useState(false);
   const [isHighContrast, setIsHighContrast] = useState(false);
   const [visibleCount, setVisibleCount] = useState(BATCH_SIZE);
@@ -34,13 +36,21 @@ const Index = () => {
     error: catsError,
     refetch: refetchCategories,
   } = useCategories();
-  // When searching, load all dishes (no category filter)
+  // The menu opens on the first category rather than the whole list.
+  const effectiveCategory = activeCategory === undefined ? categories[0]?.id : activeCategory;
+
+  // When searching, load all dishes (no category filter). Hold the query until
+  // the categories are known, otherwise the first render fetches the entire
+  // menu and then immediately replaces it with the first category.
   const {
     data: rawDishes = [],
     isLoading: dishesLoading,
     error: dishesError,
     refetch: refetchDishes,
-  } = useDishes(searchQuery ? undefined : (activeCategory ?? undefined));
+  } = useDishes(
+    searchQuery ? undefined : (effectiveCategory ?? undefined),
+    Boolean(searchQuery) || !catsLoading
+  );
 
   // A failed request and an empty database both leave these arrays empty, so
   // without this the "menu coming soon" screen hides genuine connection
@@ -85,7 +95,7 @@ const Index = () => {
   // Reset visible count when category changes or new dishes load
   useEffect(() => {
     setVisibleCount(BATCH_SIZE);
-  }, [activeCategory, dishes]);
+  }, [effectiveCategory, dishes]);
 
   // Intersection observer sentinel — loads more dishes when scrolled into view
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -150,7 +160,7 @@ const Index = () => {
         ) : (
           <CategoryNav
             categories={categories}
-            activeCategory={activeCategory}
+            activeCategory={effectiveCategory ?? null}
             onSelect={setActiveCategory}
             lang={lang}
           />

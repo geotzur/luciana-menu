@@ -30,18 +30,6 @@ export function CategoryNav({ categories, activeCategory, onSelect, lang }: Cate
         className="flex gap-2 overflow-x-auto px-4 py-3 scrollbar-hide"
         style={{ scrollbarWidth: "none" }}
       >
-        <button
-          ref={activeCategory === null ? activeRef : undefined}
-          onClick={() => onSelect(null)}
-          className={cn(
-            "shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap",
-            activeCategory === null
-              ? "bg-primary text-primary-foreground"
-              : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-          )}
-        >
-          {t(lang, "allDishes")}
-        </button>
         {categories.map((cat) => (
           <button
             key={cat.id}
@@ -57,6 +45,18 @@ export function CategoryNav({ categories, activeCategory, onSelect, lang }: Cate
             {lang === "he" ? cat.name_he : cat.name_en || cat.name_he}
           </button>
         ))}
+        <button
+          ref={activeCategory === null ? activeRef : undefined}
+          onClick={() => onSelect(null)}
+          className={cn(
+            "shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors whitespace-nowrap",
+            activeCategory === null
+              ? "bg-primary text-primary-foreground"
+              : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+          )}
+        >
+          {t(lang, "allDishes")}
+        </button>
       </div>
     </div>
   );
