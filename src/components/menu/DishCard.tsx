@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { Language, t } from "@/lib/i18n";
 import type { Dish } from "@/hooks/useMenu";
-import { ChefHat } from "lucide-react";
+import { ChefHat, Clock } from "lucide-react";
 import { brand } from "@/config/brand";
 import { getDishBadges, type DishBadge } from "@/lib/dishBadges";
 import { getProxiedImageUrl } from "@/lib/imageUtils";
@@ -14,10 +14,26 @@ interface DishCardProps {
   index?: number;
 }
 
-function BadgeRow({ badges, className }: { badges: DishBadge[]; className?: string }) {
-  if (badges.length === 0) return null;
+function BadgeRow({
+  badges,
+  className,
+  availableUntil,
+  lang,
+}: {
+  badges: DishBadge[];
+  className?: string;
+  availableUntil?: string;
+  lang?: Language;
+}) {
+  if (badges.length === 0 && !availableUntil) return null;
   return (
     <div className={cn("flex flex-wrap gap-1", className)}>
+      {availableUntil && lang && (
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-secondary text-secondary-foreground">
+          <Clock className="w-3 h-3" />
+          {t(lang, "servedUntil")} {availableUntil}
+        </span>
+      )}
       {badges.map((b) => (
         <span
           key={b.label}
@@ -85,6 +101,9 @@ export function DishCard({ dish, lang, index = 0 }: DishCardProps) {
   const thumbnailUrl = showImages ? getProxiedImageUrl(dish.image_url, "thumbnail") : null;
   const fullImageUrl = showImages ? getProxiedImageUrl(dish.image_url, "full") : null;
   const badges = getDishBadges(dish, lang);
+  // Shown all day, not only before the cut-off: a diner arriving at two o'clock
+  // should learn that breakfast exists and when to come back for it.
+  const availableUntil = dish.available_until?.trim() || "";
 
   // A dish sold in two sizes carries its own display string ("₪12 / ₪10");
   // everything else falls back to the single numeric price.
@@ -115,7 +134,7 @@ export function DishCard({ dish, lang, index = 0 }: DishCardProps) {
         fetchPriority={index < 2 ? "high" : "auto"}
         onLoad={onImgLoad}
       />
-      <BadgeRow badges={badges} className="absolute top-2 start-2" />
+      <BadgeRow badges={badges} availableUntil={availableUntil} lang={lang} className="absolute top-2 start-2" />
     </div>
   );
 
@@ -135,7 +154,7 @@ export function DishCard({ dish, lang, index = 0 }: DishCardProps) {
         onClick={openDialog}
       >
         {image}
-        {!thumbnailUrl && <BadgeRow badges={badges} className="mb-2" />}
+        {!thumbnailUrl && <BadgeRow badges={badges} availableUntil={availableUntil} lang={lang} className="mb-2" />}
         <div className="pt-3 space-y-1.5">
           <TitleRow name={name} price={price} nameClass="text-xl" priceClass="text-xl font-extrabold" />
           {description && (
@@ -164,7 +183,7 @@ export function DishCard({ dish, lang, index = 0 }: DishCardProps) {
         {description && (
           <p className="text-muted-foreground text-base leading-relaxed mt-1">{description}</p>
         )}
-        <BadgeRow badges={badges} className="mt-2" />
+        <BadgeRow badges={badges} availableUntil={availableUntil} lang={lang} className="mt-2" />
         {chefNote && (
           <div className="flex items-center gap-1.5 text-primary/80 text-sm mt-1.5">
             <ChefHat className="w-4 h-4" />
@@ -185,7 +204,7 @@ export function DishCard({ dish, lang, index = 0 }: DishCardProps) {
         onClick={openDialog}
       >
         {image}
-        {!thumbnailUrl && <BadgeRow badges={badges} className="px-4 pt-4" />}
+        {!thumbnailUrl && <BadgeRow badges={badges} availableUntil={availableUntil} lang={lang} className="px-4 pt-4" />}
         <div className="p-4 space-y-2">
           <TitleRow name={name} price={price} nameClass="text-2xl" priceClass="text-2xl font-bold" />
           {description && (
@@ -228,10 +247,16 @@ export function DishCard({ dish, lang, index = 0 }: DishCardProps) {
             </div>
           )}
           <div className="space-y-3">
-            {(price || badges.length > 0) && (
+            {(price || badges.length > 0 || availableUntil) && (
               <div className="flex flex-wrap items-center justify-between gap-2">
                 {price && <span className="text-primary font-bold text-2xl">{price}</span>}
-                <BadgeRow badges={badges} />
+                <BadgeRow badges={badges} availableUntil={availableUntil} lang={lang} />
+              </div>
+            )}
+            {availableUntil && (
+              <div className="flex items-center gap-2 text-sm text-secondary-foreground bg-secondary/60 rounded-lg px-3 py-2">
+                <Clock className="w-4 h-4 shrink-0" />
+                <span>{t(lang, "servedUntilNote")} {availableUntil}</span>
               </div>
             )}
             {description && (

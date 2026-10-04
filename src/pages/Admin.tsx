@@ -247,7 +247,7 @@ function DishManager({ dishes, categories, onUpdate }: { dishes: Dish[]; categor
 
   const emptyForm = useMemo(() => ({
     name_he: "", name_en: "", description_he: "", description_en: "",
-    price: 0, price_text: "", category_id: "", is_available: true, is_vegan: false,
+    price: 0, price_text: "", available_until: "", category_id: "", is_available: true, is_vegan: false,
     is_gluten_free: false, is_spicy: false, is_vegetarian: false, is_new: false, display_order: 0, image_url: "", chef_note: "", chef_note_en: "",
   }), []);
   const [form, setForm] = useState(emptyForm);
@@ -354,7 +354,7 @@ function DishManager({ dishes, categories, onUpdate }: { dishes: Dish[]; categor
     setEditing(dish);
     setForm({
       name_he: dish.name_he, name_en: dish.name_en, description_he: dish.description_he || "",
-      description_en: dish.description_en || "", price: dish.price, price_text: dish.price_text || "", category_id: dish.category_id,
+      description_en: dish.description_en || "", price: dish.price, price_text: dish.price_text || "", available_until: dish.available_until || "", category_id: dish.category_id,
       is_available: dish.is_available, is_vegan: dish.is_vegan, is_gluten_free: dish.is_gluten_free,
       is_spicy: dish.is_spicy, is_vegetarian: dish.is_vegetarian, is_new: dish.is_new,
       display_order: dish.display_order, image_url: dish.image_url || "",
@@ -456,6 +456,30 @@ function DishManager({ dishes, categories, onUpdate }: { dishes: Dish[]; categor
                     <Sparkles className="h-3 w-3" />זיהוי אוטומטי
                   </Button>
                 </div>
+                <div className="rounded-lg border border-border p-3 space-y-2">
+                  <label className="flex items-center gap-2">
+                    <Switch
+                      checked={Boolean(form.available_until)}
+                      onCheckedChange={(v) => setForm({ ...form, available_until: v ? "12:00" : "" })}
+                    />
+                    <span className="text-sm">מוגש עד שעה מסוימת</span>
+                  </label>
+                  {Boolean(form.available_until) && (
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="time"
+                        value={form.available_until}
+                        onChange={(e) => setForm({ ...form, available_until: e.target.value })}
+                        className="w-32"
+                        dir="ltr"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        יוצג על המנה כל היום, גם אחרי השעה.
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   <label className="flex items-center gap-2"><Switch checked={form.is_available} onCheckedChange={(v) => setForm({ ...form, is_available: v })} /><span className="text-sm">זמין</span></label>
                   <label className="flex items-center gap-2"><Switch checked={form.is_new} onCheckedChange={(v) => setForm({ ...form, is_new: v })} /><span className="text-sm">חדש</span></label>

@@ -42,6 +42,8 @@ export const translations = {
     loadErrorHint: 'החיבור למסד הנתונים נכשל. בדקו את הגדרות החיבור.',
     retry: 'נסו שוב',
     emptyMenu: 'התפריט עדיין ריק',
+    servedUntil: 'מוגש עד',
+    servedUntilNote: 'מנות אלו מוגשות עד',
   },
   en: {
     menu: 'Menu',
@@ -84,6 +86,8 @@ export const translations = {
     loadErrorHint: 'The connection to the database failed. Check the connection settings.',
     retry: 'Try again',
     emptyMenu: 'The menu is empty',
+    servedUntil: 'Until',
+    servedUntilNote: 'These dishes are served until',
   },
 } as const;
 

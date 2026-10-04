@@ -8,7 +8,7 @@ import { brand } from "@/config/brand";
 import { applyBrandLanguage } from "@/lib/applyBrand";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { Search, X, AlertTriangle } from "lucide-react";
+import { Search, X, AlertTriangle, Clock } from "lucide-react";
 
 const BATCH_SIZE = 6;
 
@@ -116,6 +116,15 @@ const Index = () => {
     observer.observe(sentinel);
     return () => observer.disconnect();
   }, [loadMore, dishesLoading]);
+
+  // When every dish on show shares one serving cut-off -- as a breakfast
+  // category does -- say it once at the top instead of only on each card.
+  const sharedUntil = useMemo(() => {
+    if (searchQuery || dishes.length === 0) return "";
+    const first = dishes[0].available_until?.trim() || "";
+    if (!first) return "";
+    return dishes.every((d) => (d.available_until?.trim() || "") === first) ? first : "";
+  }, [dishes, searchQuery]);
 
   const visibleDishes = dishes.slice(0, visibleCount);
   const hasMore = visibleCount < dishes.length;
@@ -236,6 +245,12 @@ const Index = () => {
           </div>
         ) : (
           <div className={cn("grid grid-cols-1", gridGap)}>
+            {sharedUntil && (
+              <div className="flex items-center gap-2 rounded-lg bg-secondary/70 px-3 py-2 text-sm text-secondary-foreground">
+                <Clock className="w-4 h-4 shrink-0" />
+                <span>{t(lang, "servedUntilNote")} {sharedUntil}</span>
+              </div>
+            )}
             {visibleDishes.map((dish, i) => (
               <DishCard key={dish.id} dish={dish} lang={lang} index={i} />
             ))}

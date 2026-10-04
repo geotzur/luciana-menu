@@ -70,6 +70,7 @@ export type Database = {
           name_en: string
           name_he: string
           price: number
+          available_until: string | null
           price_text: string | null
           updated_at: string
         }
@@ -92,6 +93,7 @@ export type Database = {
           name_en?: string
           name_he: string
           price?: number
+          available_until?: string | null
           price_text?: string | null
           updated_at?: string
         }
@@ -114,6 +116,7 @@ export type Database = {
           name_en?: string
           name_he?: string
           price?: number
+          available_until?: string | null
           price_text?: string | null
           updated_at?: string
         }

@@ -24,6 +24,7 @@ interface ParsedDish {
   description_en: string;
   price: number;
   price_text: string;
+  available_until: string;
   image_url: string;
   chef_note: string;
   is_vegan: boolean;
@@ -86,6 +87,7 @@ export function ExcelUploader({ onUpdate }: { onUpdate: () => void }) {
         const colPrice = findColIndex(["מחיר (₪)", "מחיר", "price"]);
         const colImage = findColIndex(["תמונה", "קישור תמונה", "image url", "image", "link", "url"]);
         const colChefNote = findColIndex(["דבר השף", "שף", "chef note", "chef"]);
+        const colAvailableUntil = findColIndex(["מוגש עד", "עד שעה", "available until", "served until"]);
         const colVegan = findColIndex(["טבעוני", "vegan"]);
         const colVegetarian = findColIndex(["צמחוני", "vegetarian"]);
         const colGlutenFree = findColIndex(["ללא גלוטן", "גלוטן", "gluten free", "gluten"]);
@@ -162,6 +164,7 @@ export function ExcelUploader({ onUpdate }: { onUpdate: () => void }) {
             price: parsePrice(priceRaw),
             // Non-empty only when the cell offers several options, e.g. "12 // 10".
             price_text: formatPriceOptions(priceRaw),
+            available_until: String(getVal(colAvailableUntil) || "").trim(),
             image_url: String(row[colImage] || "").trim(),
             chef_note: String(row[colChefNote] || "").trim(),
             is_vegan: parseBool(row[colVegan]),
@@ -210,6 +213,7 @@ export function ExcelUploader({ onUpdate }: { onUpdate: () => void }) {
         description_en: d.description_en,
         price: d.price,
         price_text: d.price_text,
+        available_until: d.available_until,
         category_id: categoryMap.get(d.category)!,
         image_url: d.image_url || null,
         chef_note: d.chef_note,
