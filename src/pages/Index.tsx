@@ -98,24 +98,33 @@ const Index = () => {
   }, [effectiveCategory, dishes]);
 
   // Intersection observer sentinel — loads more dishes when scrolled into view
-  const sentinelRef = useRef<HTMLDivElement>(null);
+  // A callback ref, not useRef + useEffect: the sentinel mounts and unmounts as
+  // `hasMore` flips, and an effect keyed on other state could miss that and
+  // leave the observer watching a detached node -- the spinner then never
+  // resolves (seen on the first category, which opens with 7 dishes).
+  const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMore = useCallback(() => {
     setVisibleCount((prev) => Math.min(prev + BATCH_SIZE, dishes.length));
   }, [dishes.length]);
 
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
+  const sentinelRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      observerRef.current?.disconnect();
+      observerRef.current = null;
+      if (!node) return;
+      const observer = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting) loadMore();
+        },
+        { rootMargin: "400px" } // start loading 400px before reaching the end
+      );
+      observer.observe(node);
+      observerRef.current = observer;
+    },
+    [loadMore]
+  );
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) loadMore();
-      },
-      { rootMargin: "400px" } // start loading 400px before reaching the end
-    );
-    observer.observe(sentinel);
-    return () => observer.disconnect();
-  }, [loadMore, dishesLoading]);
+  useEffect(() => () => observerRef.current?.disconnect(), []);
 
   // When every dish on show shares one serving cut-off -- as a breakfast
   // category does -- say it once at the top instead of only on each card.
