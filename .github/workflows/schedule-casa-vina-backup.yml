@@ -1,22 +1,50 @@
-# GitHub runs `schedule` triggers only from the default branch (main, the
-# Luciana menu). The Casa Vina menu and its backup workflow live on
-# claude/project-replica-new-client-6ipjfe, so this nightly job starts that
-# branch's "Backup menu" workflow, which snapshots the Casa Vina menu into
-# backups/ on that branch.
+# GitHub runs `schedule` (and manually started) workflows only from the default
+# branch -- main, the Luciana menu. The Casa Vina menu lives on
+# claude/project-replica-new-client-6ipjfe, so this job checks that branch out,
+# runs its scripts/backup-menu.mjs, and commits the snapshot into backups/ there.
+# Needs repository secrets SUPABASE_URL and SUPABASE_ANON_KEY (Casa Vina project).
 
-name: Schedule Casa Vina backup
+name: Backup Casa Vina menu
 
 on:
   schedule:
     - cron: "17 2 * * *" # 02:17 UTC daily
   workflow_dispatch:
 
+concurrency:
+  group: backup-casa-vina
+  cancel-in-progress: false
+
 jobs:
-  trigger:
+  snapshot:
     runs-on: ubuntu-latest
     permissions:
-      actions: write
+      contents: write
     steps:
-      - run: gh workflow run backup-menu.yml --repo "$GITHUB_REPOSITORY" --ref claude/project-replica-new-client-6ipjfe
+      - uses: actions/checkout@v4
+        with:
+          ref: claude/project-replica-new-client-6ipjfe
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Snapshot menu and photos
         env:
-          GH_TOKEN: ${{ github.token }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: node scripts/backup-menu.mjs
+
+      - name: Commit if anything changed
+        run: |
+          if [ -z "$(git status --porcelain backups)" ]; then
+            echo "menu unchanged since the last snapshot"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add backups
+          dishes=$(node -e "console.log(require('./backups/menu-latest.json').dishes.length)")
+          photos=$(ls backups/dish-images 2>/dev/null | wc -l | tr -d ' ')
+          git commit -m "Menu snapshot: ${dishes} dishes, ${photos} photos"
+          git push origin HEAD:claude/project-replica-new-client-6ipjfe
