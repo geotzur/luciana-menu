@@ -1,0 +1,22 @@
+# GitHub runs `schedule` triggers only from the default branch (main, the
+# Luciana menu). The Casa Vina menu and its backup workflow live on
+# claude/project-replica-new-client-6ipjfe, so this nightly job starts that
+# branch's "Backup menu" workflow, which snapshots the Casa Vina menu into
+# backups/ on that branch.
+
+name: Schedule Casa Vina backup
+
+on:
+  schedule:
+    - cron: "17 2 * * *" # 02:17 UTC daily
+  workflow_dispatch:
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - run: gh workflow run backup-menu.yml --repo "$GITHUB_REPOSITORY" --ref claude/project-replica-new-client-6ipjfe
+        env:
+          GH_TOKEN: ${{ github.token }}
