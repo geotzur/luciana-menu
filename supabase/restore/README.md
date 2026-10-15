@@ -35,7 +35,38 @@ it, for anything that prefers data to SQL.
 ## Avoiding a repeat
 
 Supabase keeps automated backups on paid plans only; on the free tier a deleted
-project is unrecoverable. Either put this project on a plan with backups, or
-export the two tables on a schedule — the `.json` beside this file is exactly
-what a `select json_agg(...)` over `categories` and `dishes` produces, so it is
-cheap to repeat.
+project is unrecoverable.
+
+`.github/workflows/backup-menu.yml` now snapshots the live menu into `backups/`
+every night and on demand, committing only when something changed. Git history
+is the version store, so any past commit is a restorable snapshot.
+
+It needs two repository secrets, under Settings → Secrets and variables →
+Actions:
+
+| Secret | Value |
+| --- | --- |
+| `SUPABASE_URL` | `https://<project-ref>.supabase.co` |
+| `SUPABASE_ANON_KEY` | the anon / publishable key — **not** `service_role` |
+
+The anon key is sufficient, because `categories` and `dishes` are publicly
+readable and the `dish-images` bucket is public. CI never holds a privileged
+credential.
+
+Two things it does deliberately:
+
+- **It mirrors the photos**, not only the rows. The photos were the one part of
+  this incident that could not be reconstructed from anything else.
+- **It refuses to shrink.** If a run returns fewer than 90% of the dishes the
+  last snapshot held, it fails instead of committing — a revoked key or a
+  half-finished import must not quietly replace a good backup with an empty
+  one. Override with `ALLOW_SHRINK=true` for a genuine large deletion.
+
+To rebuild a restore script from any snapshot, including an older commit:
+
+```sh
+node scripts/menu-json-to-sql.mjs backups/menu-latest.json > restore.sql
+```
+
+Run it before an Excel import too — importing deletes every category and dish
+first, so a snapshot taken just beforehand is the cheapest possible undo.
