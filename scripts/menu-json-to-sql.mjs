@@ -1,7 +1,7 @@
 /**
  * Turns a backup snapshot into a restore script.
  *
- *   node scripts/menu-json-to-sql.mjs backups/menu-latest.json > restore.sql
+ *   node scripts/menu-json-to-sql.mjs menu-latest.json > restore.sql
  *
  * Original ids are preserved so dishes keep their categories. The output runs
  * in a transaction and aborts if a menu is already present, so it cannot
@@ -28,10 +28,10 @@ const DISH_COLS = [
   "price", "price_text", "available_until", "image_url", "is_available", "is_vegan",
   "is_vegetarian", "is_gluten_free", "is_spicy", "is_new", "chef_note", "chef_note_en",
   "display_order",
-];
+].filter((c) => dishes.some((d) => c in d)); // older menus lack newer columns
 
 const out = [];
-out.push(`-- Casa Vina menu restore`);
+out.push(`-- Menu restore`);
 out.push(`-- Snapshot taken ${taken_at ?? "unknown"}${source ? ` from ${source}` : ""}.`);
 out.push(`-- Apply supabase/migrations/ first. Run before any Excel import, which`);
 out.push(`-- deletes every category and dish.\n`);
@@ -63,7 +63,7 @@ out.push("\ncommit;");
 const withPhotos = dishes.filter((d) => (d.image_url || "").trim()).length;
 out.push(`
 -- ${withPhotos} dishes carry a photo URL pointing at the project this snapshot
--- came from. After re-uploading the images in backups/dish-images/ to the new
+-- came from. After re-uploading the images in dish-images/ (from the backup zip) to the new
 -- project's dish-images bucket under the same file names:
 --
 --   update public.dishes

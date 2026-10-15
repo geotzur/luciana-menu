@@ -1,15 +1,16 @@
 /**
- * Snapshots the live menu into the repository.
- *
- * Writes backups/menu-latest.json and mirrors every dish photo into
- * backups/dish-images/. Git history provides the versioning, so a bad edit or a
- * deleted project can be recovered from any past commit.
+ * Snapshots a live menu: writes <OUT_DIR>/menu-latest.json and mirrors every
+ * dish photo into <OUT_DIR>/dish-images/. The scheduled workflow on main zips
+ * the result into a GitHub release and keeps only the newest few.
  *
  * Reads with the anon key: `categories` and `dishes` are publicly readable by
  * design, and the dish-images bucket is public, so no privileged credential
  * ever goes near CI.
  *
  *   SUPABASE_URL=... SUPABASE_ANON_KEY=... node scripts/backup-menu.mjs
+ *
+ * OUT_DIR defaults to backups/. PREV_JSON points at the previous snapshot for
+ * the shrink check (defaults to the menu-latest.json already in OUT_DIR).
  */
 import { mkdir, readFile, writeFile, readdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
@@ -22,8 +23,10 @@ if (!URL_BASE || !KEY) {
   process.exit(1);
 }
 
-const OUT_JSON = "backups/menu-latest.json";
-const OUT_IMAGES = "backups/dish-images";
+const OUT_DIR = process.env.OUT_DIR || "backups";
+const OUT_JSON = path.join(OUT_DIR, "menu-latest.json");
+const OUT_IMAGES = path.join(OUT_DIR, "dish-images");
+const PREV_JSON = process.env.PREV_JSON || OUT_JSON;
 
 async function fetchTable(table) {
   const res = await fetch(`${URL_BASE}/rest/v1/${table}?select=*`, {
@@ -42,8 +45,8 @@ console.log(`fetched ${categories.length} categories, ${dishes.length} dishes`);
  * backup with nothing -- precisely when it is needed most. Set
  * ALLOW_SHRINK=true for a deliberate large deletion.
  */
-if (existsSync(OUT_JSON) && process.env.ALLOW_SHRINK !== "true") {
-  const prev = JSON.parse(await readFile(OUT_JSON, "utf8"));
+if (existsSync(PREV_JSON) && process.env.ALLOW_SHRINK !== "true") {
+  const prev = JSON.parse(await readFile(PREV_JSON, "utf8"));
   const prevDishes = prev.dishes?.length ?? 0;
   if (dishes.length < prevDishes * 0.9) {
     console.error(
@@ -54,7 +57,7 @@ if (existsSync(OUT_JSON) && process.env.ALLOW_SHRINK !== "true") {
   }
 }
 
-await mkdir("backups", { recursive: true });
+await mkdir(OUT_DIR, { recursive: true });
 await writeFile(
   OUT_JSON,
   JSON.stringify(
