@@ -1,0 +1,103 @@
+# Backs up both menus in this repository as GitHub releases.
+#
+#   casa-vina  Casa Vina, on branch claude/project-replica-new-client-6ipjfe
+#   luciana    Luciana, on main
+#
+# Each run snapshots a menu (dishes, categories and every photo) and, only if
+# something changed since the newest backup, publishes it as a release named
+# backup-<menu>-<date> holding menu-latest.json and a zip with the photos.
+# Only the newest KEEP releases per menu are kept; older ones are deleted.
+#
+# It lives on main because GitHub runs scheduled workflows only from the
+# default branch. Restore steps: docs/RESTORE-MENU.md.
+#
+# Secrets (anon/publishable keys only -- the menus and photos are public):
+#   CASA_VINA_SUPABASE_URL, CASA_VINA_SUPABASE_ANON_KEY
+#   LUCIANA_SUPABASE_URL,   LUCIANA_SUPABASE_ANON_KEY
+
+name: Backup menus
+
+on:
+  schedule:
+    - cron: "17 2 * * *" # daily check, 02:17 UTC; a release is made only on change
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Publish a backup even if nothing changed"
+        type: boolean
+        default: false
+
+concurrency:
+  group: backup-menus
+  cancel-in-progress: false
+
+env:
+  KEEP: 5
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - menu: casa-vina
+            url_secret: CASA_VINA_SUPABASE_URL
+            key_secret: CASA_VINA_SUPABASE_ANON_KEY
+          - menu: luciana
+            url_secret: LUCIANA_SUPABASE_URL
+            key_secret: LUCIANA_SUPABASE_ANON_KEY
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PREFIX: backup-${{ matrix.menu }}-
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Fetch the newest backup for comparison
+        run: |
+          prev=$(gh release list --limit 100 --json tagName,createdAt \
+            -q "[.[] | select(.tagName | startswith(\"$PREFIX\"))] | sort_by(.createdAt) | last | .tagName // empty")
+          echo "PREV_TAG=$prev" >> "$GITHUB_ENV"
+          if [ -n "$prev" ]; then gh release download "$prev" -p menu-latest.json -D prev; fi
+
+      - name: Snapshot menu and photos
+        env:
+          SUPABASE_URL: ${{ secrets[matrix.url_secret] }}
+          SUPABASE_ANON_KEY: ${{ secrets[matrix.key_secret] }}
+          OUT_DIR: snapshot
+          PREV_JSON: prev/menu-latest.json
+        run: node scripts/backup-menu.mjs
+
+      - name: Publish if anything changed
+        run: |
+          same=$(node -e '
+            const fs = require("fs"), strip = (f) => { const j = JSON.parse(fs.readFileSync(f)); delete j.taken_at; return JSON.stringify(j); };
+            console.log(fs.existsSync("prev/menu-latest.json") && strip("prev/menu-latest.json") === strip("snapshot/menu-latest.json") ? "yes" : "no");')
+          if [ "$same" = yes ] && [ "${{ inputs.force }}" != true ]; then
+            echo "${{ matrix.menu }}: unchanged since $PREV_TAG -- no new backup"
+            exit 0
+          fi
+          tag="$PREFIX$(date -u +%Y-%m-%d-%H%M)"
+          dishes=$(node -e 'console.log(require("./snapshot/menu-latest.json").dishes.length)')
+          photos=$(ls snapshot/dish-images 2>/dev/null | wc -l | tr -d ' ')
+          (cd snapshot && zip -qr "../${{ matrix.menu }}-backup.zip" .)
+          gh release create "$tag" snapshot/menu-latest.json "${{ matrix.menu }}-backup.zip" \
+            --target "$GITHUB_SHA" --latest=false \
+            --title "Backup: ${{ matrix.menu }} $(date -u +%Y-%m-%d)" \
+            --notes "${dishes} dishes, ${photos} photos. Restore: see docs/RESTORE-MENU.md on main."
+          echo "published $tag ($dishes dishes, $photos photos)"
+
+      - name: Keep only the newest ${{ env.KEEP }}
+        run: |
+          gh release list --limit 100 --json tagName,createdAt \
+            -q "[.[] | select(.tagName | startswith(\"$PREFIX\"))] | sort_by(.createdAt) | reverse | .[$KEEP:] | .[].tagName" |
+          while read -r old; do
+            echo "deleting $old"
+            gh release delete "$old" --yes --cleanup-tag
+          done
