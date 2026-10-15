@@ -74,11 +74,14 @@ console.log(`wrote ${OUT_JSON}`);
 // Photos are the part that cannot be reconstructed from anything else.
 await mkdir(OUT_IMAGES, { recursive: true });
 const have = new Set(existsSync(OUT_IMAGES) ? await readdir(OUT_IMAGES) : []);
-let added = 0, failed = 0;
+let added = 0, failed = 0, foreign = 0;
 
 for (const dish of dishes) {
   const url = (dish.image_url || "").trim();
   if (!url || !url.startsWith("http")) continue;
+  // Links into another (e.g. deleted) Supabase project can never be fetched;
+  // count them instead of letting them mask whether this project's photos work.
+  if (url.includes(".supabase.co/") && !url.startsWith(URL_BASE + "/")) { foreign++; continue; }
   const name = decodeURIComponent(url.split("?")[0].split("/").pop() || "");
   if (!name || have.has(name)) continue;
   try {
@@ -92,7 +95,7 @@ for (const dish of dishes) {
     failed++;
   }
 }
-console.log(`photos: ${added} new, ${have.size} held in total, ${failed} failed`);
+console.log(`photos: ${added} new, ${have.size} held in total, ${failed} failed, ${foreign} skipped (other project)`);
 if (failed > 0 && added === 0 && have.size === 0) {
   console.error("every photo download failed — not treating this as a usable backup");
   process.exit(1);
